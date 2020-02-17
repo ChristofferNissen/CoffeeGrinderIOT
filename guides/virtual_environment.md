@@ -24,3 +24,5 @@ https://towardsdatascience.com/virtual-environments-104c62d48c54
 
 # python path
 PYTHONPATH = PYTHONPATH:''
+
+export PYTHONPATH=$PYTHONPATH:/home/cn/Documents/Lib/second_semester/IOT/repo/CoffeeGrinderIOT/lib
