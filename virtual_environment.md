@@ -1,7 +1,7 @@
 
 # Create new virtual environment
 
-python3 -m virtualenv virtualenv/
+python3 -m virtualenv virtualenv/ --no-site-packages
 
 source virtualenv/bin/activate   
 
@@ -20,3 +20,7 @@ deactivate
 
 # Source
 https://towardsdatascience.com/virtual-environments-104c62d48c54
+
+
+# python path
+PYTHONPATH = PYTHONPATH:''

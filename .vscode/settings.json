@@ -1,3 +1,3 @@
 {
-    "python.pythonPath": "/home/cn/.virtualenvs/CoffeeGrinderIOT/bin/python:./lib"
+    "python.pythonPath": "./usr/bin/python:./lib"
 }
