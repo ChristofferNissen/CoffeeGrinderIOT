@@ -24,6 +24,12 @@ from LIS2HH12 import LIS2HH12
 from pytrack import Pytrack
 from L76GLNSV4 import L76GNSS
 
+from network import LoRa
+import socket
+import ubinascii
+import binascii
+
+
 class GrindDuration: 
     MOCCA = 7
     SMALL = 21
@@ -32,7 +38,6 @@ class GrindDuration:
 # Global debug variables
 VIBRATION_LIGHT_INDICATOR = False
 DEBUG = False
-
 
 # SETUP START
 # remove blue blink and enable garbage collection
@@ -53,6 +58,17 @@ print('Adjusted from UTC to EST timezone', utime.localtime(), '\n')
 print("up")
 py = Pytrack()
 li = LIS2HH12(py)
+
+# LORA
+
+# Initialise LoRa in LORAWAN mode.
+# Please pick the region that matches where you are using the device:
+lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
+
+# create an OTAA authentication parameters
+app_eui = ubinascii.unhexlify('70B3D57ED002B1CF')
+app_key = ubinascii.unhexlify('A5B455945D46AF12CE0943BD2BCAFACE')
+
 
 # to setup gps for modified api library  
 # L76 = L76GNSS(pytrack=py, timeout=10)
@@ -76,10 +92,10 @@ def blink_led(times, color):
 
 def blink_error():
     for _ in range(2):
+        pycom.rgbled(0x000000)
+        time.sleep (0.05) 
         pycom.rgbled(0xff0000) # red
-        time.sleep (0.05)
-        pycom.rgbled(0xffffff) # white
-        time.sleep (0.05)
+        time.sleep (0.1)
     pycom.rgbled(0x000000) # black
 
 # NETWORK
@@ -90,7 +106,45 @@ def join_network():
     while not wlan.isconnected():
         utime.sleep_ms(50)
     print(wlan.ifconfig())
-    solid_led_timed(2, 0x00FF00)
+    solid_led_timed(1.5, 0x006400)
+
+def get_device_eui():
+    #get your device's EUI
+    lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
+    print(binascii.hexlify(lora.mac()).upper().decode('utf-8'))
+
+def join_lorawan_network():
+    # step 1: Not nessesary once set up
+    # get_device_eui()
+
+    # join a network using OTAA (Over the Air Activation)
+    lora.join(activation=LoRa.OTAA, auth=(app_eui, app_key), timeout=0)
+
+    # wait until the module has joined the network
+    while not lora.has_joined():
+        time.sleep(2.5)
+        print('Not yet joined...')
+
+    # create a LoRa socket
+    s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
+
+    # set the LoRaWAN data rate
+    s.setsockopt(socket.SOL_LORA, socket.SO_DR, 5)
+
+    # make the socket blocking
+    # (waits for the data to be sent and for the 2 receive windows to expire)
+    # s.setblocking(True)
+
+    # send some data
+    # s.send(bytes([0x01, 0x02, 0x03]))
+
+    # make the socket non-blocking
+    # (because if there's no data received it will block forever...)
+    # s.setblocking(False)
+
+    # get any data received (if any...)
+    # data = s.recv(64)
+    # print(data)
 
 # Standard deviation calculation methods
 
@@ -113,7 +167,6 @@ def standard_deviation(l, num_measurements):
     return final
 
 # SAMPLING
-
 def sample_and_calculate_stdiv(samples):
     one = []
     two = []
@@ -174,8 +227,9 @@ def measure_vibration_duration():
     # solid_led(0x000000)
     return duration
 
+print("joining network...")
 # main
-join_network()
+join_lorawan_network()
 while (True):
     duration = measure_vibration_duration() / 1000
     print("Duration: {0}".format(duration))
@@ -193,7 +247,7 @@ while (True):
         blink_led(3, 0x5a3e32)
 
     elif duration < 3:
-        # skip this, somebody bumped machine
+        # skip this measurement, somebody bumped machine
         blink_led(1, 0x006400)
         
     else: 
