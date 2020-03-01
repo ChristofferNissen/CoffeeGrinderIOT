@@ -10,5 +10,5 @@ sudo usermod -a -G dialout $USER
 
 # To get PyMakr to upload files
 
-Hit: ctrl + shift + G -> "safe_boot_on_upload" = true
+Hit: ctrl + shift + G -> "safe_boot_on_upload" = true -> Hit: ctrl + s -> click 'Upload'
 

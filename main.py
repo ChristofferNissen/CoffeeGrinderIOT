@@ -23,7 +23,6 @@ from machine import SD
 from LIS2HH12 import LIS2HH12
 from pytrack import Pytrack
 from L76GLNSV4 import L76GNSS
-
 from network import LoRa
 import socket
 import ubinascii
@@ -38,6 +37,9 @@ class GrindDuration:
 # Global debug variables
 VIBRATION_LIGHT_INDICATOR = False
 DEBUG = False
+# How often send the data count.
+SEND_DATA_TIMER = 60.0
+RESET_COUNTER = 86400
 
 # SETUP START
 # remove blue blink and enable garbage collection
@@ -66,8 +68,12 @@ li = LIS2HH12(py)
 lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
 
 # create an OTAA authentication parameters
-app_eui = ubinascii.unhexlify('70B3D57ED002B1CF')
-app_key = ubinascii.unhexlify('A5B455945D46AF12CE0943BD2BCAFACE')
+app_eui_token = '70B3D57ED002B7ED'
+app_key_token = '8CEB6DBBF3C9E0A60DF45ED49BF1E6FB'
+app_eui = ubinascii.unhexlify(app_eui_token)
+print('App EUI was set to the value:',app_eui_token)
+app_key = ubinascii.unhexlify(app_key_token)
+print('App key was set to the value:',app_eui_token)
 
 
 # to setup gps for modified api library  
@@ -111,7 +117,7 @@ def join_network():
 def get_device_eui():
     #get your device's EUI
     lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
-    print(binascii.hexlify(lora.mac()).upper().decode('utf-8'))
+    return binascii.hexlify(lora.mac()).upper().decode('utf-8')
 
 def join_lorawan_network():
     # step 1: Not nessesary once set up
@@ -121,10 +127,11 @@ def join_lorawan_network():
     lora.join(activation=LoRa.OTAA, auth=(app_eui, app_key), timeout=0)
 
     # wait until the module has joined the network
-    while not lora.has_joined():
-        time.sleep(2.5)
+    while not lora.has_joined():        
+        time.sleep(2.5)              
         print('Not yet joined...')
 
+def create_socket():
     # create a LoRa socket
     s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
 
@@ -145,6 +152,7 @@ def join_lorawan_network():
     # get any data received (if any...)
     # data = s.recv(64)
     # print(data)
+    return s
 
 # Standard deviation calculation methods
 
@@ -227,26 +235,50 @@ def measure_vibration_duration():
     # solid_led(0x000000)
     return duration
 
+
+print('Check that you have set correct device EUI on the thethingsnetwork.org. The device EUI value:', get_device_eui())
 print("joining network...")
 # main
 join_lorawan_network()
+s = create_socket()
+# coffee_count = ['MOCCA','SMALL', 'BIG']
+coffee_count = [0x00, 0x00, 0x00]
+send_data_trigger = 0.0
+reset_data_trigger = 0
 while (True):
     duration = measure_vibration_duration() / 1000
     print("Duration: {0}".format(duration))
-
+    
     if duration > GrindDuration.MOCCA-1 and duration < GrindDuration.MOCCA+1:
+        coffee_count[0] +=1
         print("MOCCA detected")
         blink_led(1, 0x5a3e32)
 
     elif duration > GrindDuration.SMALL-1 and duration < GrindDuration.SMALL+1:
+        coffee_count[1] +=1
         print("SMALL detected")
         blink_led(2, 0x5a3e32)
 
     elif duration > GrindDuration.LARGE-1 and duration < GrindDuration.LARGE+1:
+        coffee_count[2] +=1
         print("LARGE detected")
         blink_led(3, 0x5a3e32)
 
-    elif duration < 3:
+    send_data_trigger += duration
+    if send_data_trigger > SEND_DATA_TIMER:
+        print('Sending data:', 'MOCCA:', coffee_count[0],'SMALL:', coffee_count[1], 'BIG:', coffee_count[2])
+        s.send(bytes(coffee_count))
+        print('Sent successfully.')
+        send_data_trigger = 0
+
+    reset_data_trigger += duration
+    if reset_data_trigger > RESET_COUNTER:
+        print('Today was made:', 'MOCCA:', coffee_count[0],'SMALL:', coffee_count[1], 'BIG:', coffee_count[2])
+        print('Reseting counter.')
+        coffee_count = [0x00, 0x00, 0x00]
+        reset_data_trigger = 0
+
+    if duration < 3:
         # skip this measurement, somebody bumped machine
         blink_led(1, 0x006400)
         
