@@ -30,9 +30,9 @@ import binascii
 
 
 class GrindDuration: 
-    MOCCA = 7
-    SMALL = 21
-    LARGE = 31
+    MOCCA = 12.5 + 7
+    SMALL = 25 + 7
+    LARGE = 33 + 7 
 
 # Global debug variables
 VIBRATION_LIGHT_INDICATOR = False
@@ -68,12 +68,17 @@ li = LIS2HH12(py)
 lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
 
 # create an OTAA authentication parameters
-app_eui_token = '70B3D57ED002B7ED'
-app_key_token = '8CEB6DBBF3C9E0A60DF45ED49BF1E6FB'
-app_eui = ubinascii.unhexlify(app_eui_token)
-print('App EUI was set to the value:',app_eui_token)
-app_key = ubinascii.unhexlify(app_key_token)
-print('App key was set to the value:',app_eui_token)
+# app_eui_token = '70B3D57ED002B7ED'
+# app_key_token = '8CEB6DBBF3C9E0A60DF45ED49BF1E6FB'
+# app_eui = ubinascii.unhexlify(app_eui_token)
+# print('App EUI was set to the value:',app_eui_token)
+# app_key = ubinascii.unhexlify(app_key_token)
+# print('App key was set to the value:',app_key_token)
+
+# create an OTAA authentication parameters
+app_eui = ubinascii.unhexlify('70B3D57ED002B1CF')
+app_key = ubinascii.unhexlify('A5B455945D46AF12CE0943BD2BCAFACE')
+
 
 
 # to setup gps for modified api library  
@@ -127,8 +132,10 @@ def join_lorawan_network():
     lora.join(activation=LoRa.OTAA, auth=(app_eui, app_key), timeout=0)
 
     # wait until the module has joined the network
-    while not lora.has_joined():        
-        time.sleep(2.5)              
+    while not lora.has_joined():
+        blink_led(0.1, 0xffffff)
+        time.sleep(2.5)     
+
         print('Not yet joined...')
 
 def create_socket():
@@ -186,13 +193,18 @@ def sample_and_calculate_stdiv(samples):
         one.append(g1)
         two.append(g2)
         three.append(g3)
-    if DEBUG: end = utime.time()
-    if DEBUG: print("Sampling took: " + str(end-start))
+    if DEBUG:
+        end = utime.time()
+    if DEBUG:
+        print("Sampling took: " + str(end-start))
 
-    if DEBUG: start = utime.time()
+    if DEBUG:
+        start = utime.time()
     t = (standard_deviation(one, samples), standard_deviation(two, samples), standard_deviation(three, samples))
-    if DEBUG: end = utime.time()
-    if DEBUG: print("Stdiv calc took: " + str(end-start))
+    if DEBUG:
+        end = utime.time()
+    if DEBUG:
+        print("Stdiv calc took: " + str(end-start))
     return t
 
 def detect_vibration():
@@ -240,53 +252,63 @@ print('Check that you have set correct device EUI on the thethingsnetwork.org. T
 print("joining network...")
 # main
 join_lorawan_network()
-s = create_socket()
+S = create_socket()
 # coffee_count = ['MOCCA','SMALL', 'BIG']
-coffee_count = [0x00, 0x00, 0x00]
-send_data_trigger = 0.0
-reset_data_trigger = 0
-while (True):
-    duration = measure_vibration_duration() / 1000
-    print("Duration: {0}".format(duration))
+COFFEE_COUNT = [0x00, 0x00, 0x00]
+SEND_DATA_TRIGGER = 0.0
+RESET_DATA_TRIGGER = 0
+DEVIATION = 2
+while  True:
+    DURATION = measure_vibration_duration() / 1000
+    SEND_DATA_TRIGGER += DURATION
+    print("Duration: {0}".format(DURATION))
     
-    if duration > GrindDuration.MOCCA-1 and duration < GrindDuration.MOCCA+1:
-        coffee_count[0] +=1
+
+    if DURATION > GrindDuration.MOCCA-DEVIATION and DURATION < GrindDuration.MOCCA+DEVIATION:
+        COFFEE_COUNT[0] = COFFEE_COUNT[0] + 1
         print("MOCCA detected")
         blink_led(1, 0x5a3e32)
 
-    elif duration > GrindDuration.SMALL-1 and duration < GrindDuration.SMALL+1:
-        coffee_count[1] +=1
+    elif DURATION > GrindDuration.SMALL-DEVIATION and DURATION < GrindDuration.SMALL+DEVIATION:
+        COFFEE_COUNT[1] = COFFEE_COUNT[1] + 1
         print("SMALL detected")
         blink_led(2, 0x5a3e32)
 
-    elif duration > GrindDuration.LARGE-1 and duration < GrindDuration.LARGE+1:
-        coffee_count[2] +=1
+    elif DURATION > GrindDuration.LARGE-DEVIATION and DURATION < GrindDuration.LARGE+DEVIATION:
+        COFFEE_COUNT[2] = COFFEE_COUNT[2] + 1
         print("LARGE detected")
         blink_led(3, 0x5a3e32)
 
-    send_data_trigger += duration
-    if send_data_trigger > SEND_DATA_TIMER:
-        print('Sending data:', 'MOCCA:', coffee_count[0],'SMALL:', coffee_count[1], 'BIG:', coffee_count[2])
-        s.send(bytes(coffee_count))
+    elif SEND_DATA_TRIGGER > SEND_DATA_TIMER:
+        print('Sending data:', 'MOCCA:', COFFEE_COUNT[0],'SMALL:', COFFEE_COUNT[1], 'BIG:', COFFEE_COUNT[2])
+        S.send(bytes(COFFEE_COUNT))
         print('Sent successfully.')
-        send_data_trigger = 0
+        COFFEE_COUNT = [0x00, 0x00, 0x00]
+        SEND_DATA_TRIGGER = 0
 
-    reset_data_trigger += duration
-    if reset_data_trigger > RESET_COUNTER:
-        print('Today was made:', 'MOCCA:', coffee_count[0],'SMALL:', coffee_count[1], 'BIG:', coffee_count[2])
-        print('Reseting counter.')
-        coffee_count = [0x00, 0x00, 0x00]
-        reset_data_trigger = 0
+    # reset_data_trigger += duration
+    # if reset_data_trigger > RESET_COUNTER:
+    #     print('Today was made:', 'MOCCA:', coffee_count[0],'SMALL:', coffee_count[1], 'BIG:', coffee_count[2])
+    #     print('Reseting counter.')
+    #     coffee_count = [0x00, 0x00, 0x00]
+    #     reset_data_trigger = 0
 
-    if duration < 3:
+    elif DURATION < 3:
         # skip this measurement, somebody bumped machine
         blink_led(1, 0x006400)
         
-    else: 
+    else:
         # failure
         # dont show user facing error
         print("Not recognied. Container not full enough for selected grind")
         blink_error()
+
+    if SEND_DATA_TRIGGER > SEND_DATA_TIMER:
+        print('Sending data:', 'MOCCA:', COFFEE_COUNT[0],'SMALL:', COFFEE_COUNT[1], 'BIG:', COFFEE_COUNT[2])
+    S.send(bytes(COFFEE_COUNT))
+    print('Sent successfully.')
+    COFFEE_COUNT = [0x00, 0x00, 0x00]
+    SEND_DATA_TRIGGER = 0
 
 
 
