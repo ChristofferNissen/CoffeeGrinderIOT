@@ -255,15 +255,14 @@ join_lorawan_network()
 S = create_socket()
 # coffee_count = ['MOCCA','SMALL', 'BIG']
 COFFEE_COUNT = [0x00, 0x00, 0x00]
-SEND_DATA_TRIGGER = 0.0
+SEND_DATA_TRIGGER = 60.0
 RESET_DATA_TRIGGER = 0
 DEVIATION = 2
-while  True:
+while True:
     DURATION = measure_vibration_duration() / 1000
     SEND_DATA_TRIGGER += DURATION
     print("Duration: {0}".format(DURATION))
     
-
     if DURATION > GrindDuration.MOCCA-DEVIATION and DURATION < GrindDuration.MOCCA+DEVIATION:
         COFFEE_COUNT[0] = COFFEE_COUNT[0] + 1
         print("MOCCA detected")
@@ -305,10 +304,10 @@ while  True:
 
     if SEND_DATA_TRIGGER > SEND_DATA_TIMER:
         print('Sending data:', 'MOCCA:', COFFEE_COUNT[0],'SMALL:', COFFEE_COUNT[1], 'BIG:', COFFEE_COUNT[2])
-    S.send(bytes(COFFEE_COUNT))
-    print('Sent successfully.')
-    COFFEE_COUNT = [0x00, 0x00, 0x00]
-    SEND_DATA_TRIGGER = 0
+        S.send(bytes(COFFEE_COUNT))
+        print('Sent successfully.')
+        COFFEE_COUNT = [0x00, 0x00, 0x00]
+        SEND_DATA_TRIGGER = 0
 
 
 
