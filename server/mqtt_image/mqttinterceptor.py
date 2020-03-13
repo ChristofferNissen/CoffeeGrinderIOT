@@ -30,7 +30,7 @@ def on_message(client, userdata, msg):
     print("Mocca:", bts[0])
     print("Small:", bts[1])
     print("Large:", bts[2])
-    print("Failrure", bts[3])
+    print("Failure", bts[3])
 
     # send request over http to api to record this mqtt message
 

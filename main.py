@@ -28,29 +28,25 @@ import socket
 import ubinascii
 import binascii
 
-
-class GrindDuration: 
-    MOCCA = 12.5 + 7
-    SMALL = 25 + 7
-    LARGE = 33 + 7 
-
-# Global debug variables
+# DEBUG VARIABLES
 VIBRATION_LIGHT_INDICATOR = False
 DEBUG = False
-# How often send the data count.
-SEND_DATA_TIMER = 60.0
-RESET_COUNTER = 86400
 
-# SETUP START
+# Defines the different types of grinds identified by the device
+class GrindDuration:
+    MOCCA = 12.5 + 7
+    SMALL = 25 + 7
+    LARGE = 33 + 7
+
 # remove blue blink and enable garbage collection
 pycom.heartbeat(0)
 gc.enable()
 
-# setup rtc clcok
-rtc = machine.RTC()
-rtc.ntp_sync("pool.ntp.org")
+# setup rtc clock
+RTC = machine.RTC()
+RTC.ntp_sync("pool.ntp.org")
 utime.sleep_ms(750)
-print('\nRTC Set from NTP to UTC:', rtc.now())
+print('\nRTC Set from NTP to UTC:', RTC.now())
 utime.timezone(3600) # 3600 = Berlin
 print('Adjusted from UTC to EST timezone', utime.localtime(), '\n')
 
@@ -58,32 +54,14 @@ print('Adjusted from UTC to EST timezone', utime.localtime(), '\n')
 
 # SETUP OBJECTS
 print("up")
-py = Pytrack()
-li = LIS2HH12(py)
 
 # LORA
-
 # Initialise LoRa in LORAWAN mode.
 # Please pick the region that matches where you are using the device:
-lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
+LORA = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
+PY = Pytrack()
+LI = LIS2HH12(PY)
 
-# create an OTAA authentication parameters
-# app_eui_token = '70B3D57ED002B7ED'
-# app_key_token = '8CEB6DBBF3C9E0A60DF45ED49BF1E6FB'
-# app_eui = ubinascii.unhexlify(app_eui_token)
-# print('App EUI was set to the value:',app_eui_token)
-# app_key = ubinascii.unhexlify(app_key_token)
-# print('App key was set to the value:',app_key_token)
-
-# create an OTAA authentication parameters
-app_eui = ubinascii.unhexlify('70B3D57ED002B1CF')
-app_key = ubinascii.unhexlify('A5B455945D46AF12CE0943BD2BCAFACE')
-
-
-
-# to setup gps for modified api library  
-# L76 = L76GNSS(pytrack=py, timeout=10)
-# L76.setAlwaysOn()
 
 
 # LED CONTROL
@@ -92,25 +70,27 @@ def solid_led(color):
 
 def solid_led_timed(seconds, color):
     pycom.rgbled(color)
-    time.sleep (seconds)
+    time.sleep(seconds)
 
 def blink_led(times, color):
     for _ in range(times):
         pycom.rgbled(color)
-        time.sleep (0.1)
+        time.sleep(0.1)
         pycom.rgbled(0x000000) # black
-        time.sleep (0.3)
+        time.sleep(0.3)
 
 def blink_error():
     for _ in range(2):
         pycom.rgbled(0x000000)
-        time.sleep (0.05) 
+        time.sleep(0.05)
         pycom.rgbled(0xff0000) # red
-        time.sleep (0.1)
+        time.sleep(0.1)
     pycom.rgbled(0x000000) # black
 
+
+
 # NETWORK
-def join_network():
+def join_wifi_network():
     # join wifi. Replace with more advanced network later
     wlan = network.WLAN(mode=network.WLAN.STA)
     wlan.connect('CN - Cisco', auth=(network.WLAN.WPA2, 'stifstof1'))
@@ -126,55 +106,46 @@ def get_device_eui():
 
 def join_lorawan_network():
     # step 1: Not nessesary once set up
-    # get_device_eui()
+    print('Check that you have set correct device EUI on the thethingsnetwork.org.',
+      'The device EUI value:', get_device_eui())
+
+    # step 2: Set auth credentials
+    # create an OTAA authentication parameters
+    app_eui = ubinascii.unhexlify('70B3D57ED002B1CF')
+    app_key = ubinascii.unhexlify('A5B455945D46AF12CE0943BD2BCAFACE')
 
     # join a network using OTAA (Over the Air Activation)
-    lora.join(activation=LoRa.OTAA, auth=(app_eui, app_key), timeout=0)
+    LORA.join(activation=LoRa.OTAA, auth=(app_eui, app_key), timeout=0)
 
     # wait until the module has joined the network
-    while not lora.has_joined():
+    while not LORA.has_joined():
         blink_led(0.1, 0xffffff)
-        time.sleep(2.5)     
-
+        time.sleep(2.5)
         print('Not yet joined...')
 
-def create_socket():
     # create a LoRa socket
     s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
 
     # set the LoRaWAN data rate
     s.setsockopt(socket.SOL_LORA, socket.SO_DR, 5)
-
-    # make the socket blocking
-    # (waits for the data to be sent and for the 2 receive windows to expire)
-    # s.setblocking(True)
-
-    # send some data
-    # s.send(bytes([0x01, 0x02, 0x03]))
-
-    # make the socket non-blocking
-    # (because if there's no data received it will block forever...)
-    # s.setblocking(False)
-
-    # get any data received (if any...)
-    # data = s.recv(64)
-    # print(data)
     return s
 
-# Standard deviation calculation methods
 
-def subtract_from_each(l, mean):
+
+
+# Standard deviation calculation methods
+def subtract_from_each_list_element(l, mean):
     # helper method for standard_deviation calculaton
-    finalList = []
+    final_list = []
     for num in l:
-        finalList.append((num-mean)**2)
-    return finalList
+        final_list.append((num-mean)**2)
+    return final_list
 
 def standard_deviation(l, num_measurements):
     # 1. Work out the Mean (the simple average of the numbers)
     mean = sum(l)/num_measurements
     # 2. Then for each number: subtract the Mean and square the result
-    l_minus_mean = subtract_from_each(l, mean)
+    l_minus_mean = subtract_from_each_list_element(l, mean)
     # 3. Then work out the mean of those squared differences.
     squared_mean = sum(l_minus_mean)/num_measurements
     # 4. Take the square root of that and we are done!
@@ -182,43 +153,59 @@ def standard_deviation(l, num_measurements):
     return final
 
 # SAMPLING
-def sample_and_calculate_stdiv(samples):
+def sample_and_calculate_stdiv(num_of_samples):
     one = []
     two = []
     three = []
 
-    if DEBUG: start = utime.time()
-    for _ in range(samples):
-        (g1, g2, g3) = li.acceleration()
-        one.append(g1)
-        two.append(g2)
-        three.append(g3)
+    if DEBUG:
+        start = utime.time()
+
+    for _ in range(num_of_samples):
+        (g_1, g_2, g_3) = LI.acceleration()
+        one.append(g_1)
+        two.append(g_2)
+        three.append(g_3)
+
     if DEBUG:
         end = utime.time()
     if DEBUG:
         print("Sampling took: " + str(end-start))
-
     if DEBUG:
         start = utime.time()
-    t = (standard_deviation(one, samples), standard_deviation(two, samples), standard_deviation(three, samples))
+
+    std_tuple = (standard_deviation(one, num_of_samples), standard_deviation(two, num_of_samples), standard_deviation(three, num_of_samples))
+
     if DEBUG:
         end = utime.time()
     if DEBUG:
         print("Stdiv calc took: " + str(end-start))
-    return t
+
+    return std_tuple
+
+
+
 
 def detect_vibration():
-    # creates a 100 samples, and gets the stdiv for each axis
-    if DEBUG: start = utime.ticks_ms()
-    (g1, g2, g3) = sample_and_calculate_stdiv(100)
-    if DEBUG: end = utime.ticks_ms()
-    if DEBUG: print("Total measurement time: " + str(end - start) + "ms")
+    vibration_sensitivity = 0.01
 
-    return ((g1 > 0.01) or (g2 > 0.01) or (g3 > 0.01)) # vibration sensitivity
+    # creates a 100 samples, and gets the stdiv for each axis
+    if DEBUG:
+        start = utime.ticks_ms()
+
+    (g_1, g_2, g_3) = sample_and_calculate_stdiv(100)
+
+    if DEBUG:
+        end = utime.ticks_ms()
+
+    if DEBUG:
+        print("Total measurement time: " + str(end - start) + "ms")
+
+    return ((g_1 > vibration_sensitivity) or (g_2 > vibration_sensitivity) or (g_3 > vibration_sensitivity))
 
 def run_detection_cycle_delayed(delay):
     vibration = detect_vibration()
-    
+ 
     if DEBUG:
         if VIBRATION_LIGHT_INDICATOR:
             if vibration:
@@ -228,41 +215,47 @@ def run_detection_cycle_delayed(delay):
         else:
             print(vibration)
 
-    print("sleeping for {0}s".format(delay))
+    if DEBUG:
+        print("sleeping for {0}s".format(delay))
+
     time.sleep(delay)
 
     return vibration
 
-def measure_vibration_duration():
+def measure_vibration_duration_ms():
     start = utime.ticks_ms()
     vibrating = run_detection_cycle_delayed(1.0)
-    # if vibrating: solid_led(0x006400)
-    while vibrating: 
+    
+    while vibrating:
         vibrating = detect_vibration()
 
     end = utime.ticks_ms()
     duration = end - start
 
-    # log duration to sd card
-    # solid_led(0x000000)
+    # log duration to sd card maybe?
+
     return duration
 
 
-print('Check that you have set correct device EUI on the thethingsnetwork.org. The device EUI value:', get_device_eui())
+
+
 print("joining network...")
-# main
-join_lorawan_network()
-S = create_socket()
-# coffee_count = ['MOCCA','SMALL', 'BIG']
-COFFEE_COUNT = [0x00, 0x00, 0x00]
-SEND_DATA_TRIGGER = 60.0
+LORA_SOCKET = join_lorawan_network()
+
+# coffee_count = ['MOCCA', 'SMALL', 'BIG', 'FAILURE']
+COFFEE_COUNT = [0x00, 0x00, 0x00, 0x00]
+SEND_DATA_TRIGGER = 0.0
 RESET_DATA_TRIGGER = 0
 DEVIATION = 2
+
+# How often send the data count.
+SEND_DATA_TIMER = 60.0 * 5 # send after 5 minutes
+
 while True:
-    DURATION = measure_vibration_duration() / 1000
+    DURATION = measure_vibration_duration_ms() / 1000
     SEND_DATA_TRIGGER += DURATION
     print("Duration: {0}".format(DURATION))
-    
+
     if DURATION > GrindDuration.MOCCA-DEVIATION and DURATION < GrindDuration.MOCCA+DEVIATION:
         COFFEE_COUNT[0] = COFFEE_COUNT[0] + 1
         print("MOCCA detected")
@@ -279,44 +272,32 @@ while True:
         blink_led(3, 0x5a3e32)
 
     elif SEND_DATA_TRIGGER > SEND_DATA_TIMER:
-        print('Sending data:', 'MOCCA:', COFFEE_COUNT[0],'SMALL:', COFFEE_COUNT[1], 'BIG:', COFFEE_COUNT[2])
-        S.send(bytes(COFFEE_COUNT))
+        print('Sending data:', 'MOCCA:', COFFEE_COUNT[0], 'SMALL:',
+              COFFEE_COUNT[1], 'BIG:', COFFEE_COUNT[2], 'FAILURE:', COFFEE_COUNT[3])
+        LORA_SOCKET.send(bytes(COFFEE_COUNT))
         print('Sent successfully.')
-        COFFEE_COUNT = [0x00, 0x00, 0x00]
+        # reset variables
+        COFFEE_COUNT = [0x00, 0x00, 0x00, 0x00]
         SEND_DATA_TRIGGER = 0
-
-    # reset_data_trigger += duration
-    # if reset_data_trigger > RESET_COUNTER:
-    #     print('Today was made:', 'MOCCA:', coffee_count[0],'SMALL:', coffee_count[1], 'BIG:', coffee_count[2])
-    #     print('Reseting counter.')
-    #     coffee_count = [0x00, 0x00, 0x00]
-    #     reset_data_trigger = 0
 
     elif DURATION < 3:
         # skip this measurement, somebody bumped machine
-        blink_led(1, 0x006400)
-        
+
+        # STATUS GREEN BLINK
+        if DEBUG:
+            blink_led(1, 0x006400)
+
+        continue
+
     else:
-        # failure
-        # dont show user facing error
         print("Not recognied. Container not full enough for selected grind")
+        COFFEE_COUNT[3] = COFFEE_COUNT[3] + 1
         blink_error()
 
     if SEND_DATA_TRIGGER > SEND_DATA_TIMER:
-        print('Sending data:', 'MOCCA:', COFFEE_COUNT[0],'SMALL:', COFFEE_COUNT[1], 'BIG:', COFFEE_COUNT[2])
-        S.send(bytes(COFFEE_COUNT))
+        print('Sending data:', 'MOCCA:', COFFEE_COUNT[0], 'SMALL:', COFFEE_COUNT[1],
+              'BIG:', COFFEE_COUNT[2], 'FALURE:', COFFEE_COUNT[3])
+        LORA_SOCKET.send(bytes(COFFEE_COUNT))
         print('Sent successfully.')
-        COFFEE_COUNT = [0x00, 0x00, 0x00]
+        COFFEE_COUNT = [0x00, 0x00, 0x00, 0x00]
         SEND_DATA_TRIGGER = 0
-
-
-
-    # print("put lopy to deepsleep for 1 second ")
-    # machine.deepsleep(1000)
-
-    # save this for shutting down in the night
-    # example using the deepsleep mode of the pytrack
-    # machine.idle()
-    # py.setup_sleep(60) # sleep 1 minute
-    # py.go_to_sleep(gps=True)
-

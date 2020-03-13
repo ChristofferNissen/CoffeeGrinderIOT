@@ -1,0 +1,1 @@
+mosquitto_sub -h eu.thethings.network -t '+/devices/+/events/activations' -u 'coffee_grinder' -P 'ttn-account-v2.WQoNmlWfpMqBDtqsLChdyzdnjPomYF3f5BW8_FMnkK4' -v
