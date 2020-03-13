@@ -8,9 +8,9 @@ CREATE TABLE Grinds (
   Duration INTEGER not null
 );
 
-CREATE TABLE record (
-  id INTEGER PRIMARY KEY auto_increment,
-  Dato DATE not null,
+CREATE TABLE Records (
+  Id INTEGER PRIMARY KEY auto_increment,
+  Date DATETIME not null,
   Grind int not null,
   FOREIGN KEY (Grind) REFERENCES Grinds(Id),
   Count INTEGER not null
