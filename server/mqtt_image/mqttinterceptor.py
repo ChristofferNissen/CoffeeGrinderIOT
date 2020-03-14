@@ -144,10 +144,10 @@ def on_connect(client, userdata, flags, rc):
 
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
-    client.subscribe("$SYS/#")
+    # client.subscribe("$SYS/#")
     client.subscribe('+/devices/+/up')
     client.subscribe('+/devices/#')
-    client.subscribe('my/topic')
+    # client.subscribe('my/topic')
 
 
 # The callback for when a PUBLISH message is received from the server.
@@ -159,7 +159,7 @@ def on_message(client, userdata, msg):
     payload = m_in['payload_raw']
     bts = base64.b64decode(payload)
 
-    seconds = time.time()
+    seconds = time.time().__add__(1) # add one hour
     local_time = time.ctime(seconds)
     print("New Message intercepted:", local_time)
     print("Failure", bts[3])
