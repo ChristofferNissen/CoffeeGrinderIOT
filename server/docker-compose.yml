@@ -1,16 +1,17 @@
 
 version: '3.3'
 
-networks:
-  main:
+# networks:
+#   main:
 
 services:
 
   mqttimage:
     image: stifstof/coffeemqttserver:latest
     container_name: mqttcontainer
-    networks:
-      - main
+    restart: always
+    # networks:
+    #   - main
     depends_on:
       - sqlimage
     ports:
@@ -20,8 +21,8 @@ services:
   sqlimage:
     image: stifstof/coffeesql:latest
     container_name: coffeesqlcontainer
-    networks:
-      - main
+    # networks:
+    #   - main
     ports:
       - '3306:3306'
     environment:

@@ -10,8 +10,7 @@ CREATE TABLE Grinds (
 
 CREATE TABLE Records (
   Id INTEGER PRIMARY KEY auto_increment,
-  Date DATETIME not null,
-  Grind int not null,
-  FOREIGN KEY (Grind) REFERENCES Grinds(Id),
+  Date VARCHAR(100) NOT NULL,
+  Grind INTEGER not null,
   Count INTEGER not null
 );

@@ -1,14 +1,14 @@
 FROM python:3.8.2-slim-buster
+EXPOSE 1883
 
 RUN mkdir /mqttserver
 
-COPY mqttinterceptor.py /mqttserver/
 COPY requirements.txt /mqttserver/
 
 WORKDIR /mqttserver
 
 RUN pip install -r requirements.txt
 
-EXPOSE 1883
+COPY mqttinterceptor.py /mqttserver/
 
-ENTRYPOINT ["python", "mqttinterceptor.py"]
+CMD ["python", "-u" ,"mqttinterceptor.py"]

@@ -2,6 +2,7 @@ import json
 import base64
 import paho.mqtt.client as mqtt
 import time
+import datetime
 
 #  from mysql import connector as conn
 import mysql.connector as mysql
@@ -11,7 +12,7 @@ import mysql.connector as mysql
 # DB_HOST = "mt_mysql"
 
 #DB_HOST = "127.0.0.1" # local
-DB_HOST = "172.17.0.2" # compose
+DB_HOST = "172.18.0.2" # compose
 DB_PORT = 3306
 DB_USER = "root"
 DB_PASSWORD = "root"
@@ -46,7 +47,8 @@ def execute_query(query, db, one=False):
     # return either the first row or all rows
     return (rv[0] if rv else None) if one else rv
 
-def get_grindtypes_in_db(db = connect_db()):
+def get_grindtypes_in_db(db):
+    # db = connect_db()
     query = """SELECT * FROM Grinds
         ORDER BY Grinds.Duration ASC LIMIT {}""".format(10)
     grinds = execute_query(query, db)
@@ -58,7 +60,21 @@ def get_grindtypes_in_db(db = connect_db()):
         filtered_msg['Duration'] = msg['Duration']
         print(filtered_msg)
 
-    db.close()
+    # db.close()
+
+def get_records_in_db(db):
+    # db = connect_db()
+    query = """SELECT * FROM Records
+        LIMIT {}""".format(10)
+    grinds = execute_query(query, db)
+
+    for msg in grinds:
+        filtered_msg = {}
+        filtered_msg['Id'] = msg['Id']
+        filtered_msg['Grind'] = msg['Grind']
+        filtered_msg['Date'] = msg['Date']
+        filtered_msg['Count'] = msg['Count']
+        print(filtered_msg)
 
 def create_grindtypes_in_db():
     db = connect_db()
@@ -96,30 +112,28 @@ def create_grindtypes_in_db():
 
     db.close()
 
-def update_db(grind, number):
-    db = connect_db()
-
+def update_db(db, grind, number):
     # check if entry for today exists
     today = datetime.date.today()
+    # print(today)
 
-    first_of_the_day = execute_query("""SELECT COUNT(*) FROM Records WHERE Records.Date = {}""".format(
-                       today), db)[0]['COUNT(*)'] == 0
+    query = """SELECT COUNT(*) FROM Records WHERE Records.Date = '{}' AND Records.Grind = '{}' """.format(
+                        today, grind)
+    first_of_the_day = execute_query(query, db)[0]['COUNT(*)'] == 0
 
-    print("First of the day? ", first_of_the_day)
+    # print("First of the day? ", first_of_the_day)
 
     if first_of_the_day: 
         query = """INSERT INTO Records (Date, Grind, Count)
                     VALUES ('{}', '{}', '{}')""".format(
-                        today, "fail", number)
+                        today, grind, number)
         execute_query_no_result(query, db)
     else: 
-        s_query = """SELECT Records.Count FROM Records WHERE Records.Date = {} AND Records.Grind = {}""".format(today, grind)
+        s_query = """SELECT Records.Count FROM Records WHERE Records.Date = '{}' AND Records.Grind = '{}'""".format(today, grind)
         current_count = execute_query(s_query, db)[0]['Count']
 
-        u_query = """UPDATE Records SET Records.Count = {} WHERE Records.Date = {} AND Records.Grind = {}""".format(current_count + number, today, grind)
+        u_query = """UPDATE Records SET Records.Count = {} WHERE Records.Date = '{}' AND Records.Grind = '{}'""".format(current_count + number, today, grind)
         execute_query_no_result(u_query, db)
-
-    db.close()
 
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
@@ -150,16 +164,31 @@ def on_message(client, userdata, msg):
     print("Large:", bts[2])
 
     print("Updating the database")
-    update_db(1, bts[0])
-    update_db(2, bts[1])
-    update_db(3, bts[2])
+    if bts[0] > 0: 
+        update_db(db, 1, bts[0])
+    if bts[1] > 0: 
+        update_db(db, 2, bts[1])
+    if bts[2] > 0: 
+        update_db(db, 3, bts[2])
+    if bts[3] > 0: 
+        update_db(db, 4, bts[3])
+    
     print("Database update done")
+
+    db.close()
+    
 
 
 # main
+print("Waiting for db container to be ready. Sleeping for 30 seconds")
+time.sleep(30)
+
+db = connect_db()
 print("Setting up db..")
 create_grindtypes_in_db()
+get_records_in_db(db)
 print("db ready")
+db.close()
 
 print("Setting up MQTT")
 client = mqtt.Client()
