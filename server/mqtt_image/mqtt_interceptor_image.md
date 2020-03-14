@@ -1,6 +1,6 @@
-# Build mysql docker image
+# Build mqtt interceptor docker image
 
-In folder mysql_image
+In folder mqtt_image
 
 Build the image by 
 

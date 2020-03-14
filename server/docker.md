@@ -57,4 +57,16 @@ outputs (alot). Somewhere near the bottom you see (under Networks):
                     "IPv6Gateway": "",
 ```
 
-Then open ./server/mqttinterceptor.py and change the ip to the ip output from docker inspect on line 12
+Open ./server/mqttinterceptor.py and change the ip to the ip output from docker inspect on line 12
+
+Then build the image by 
+
+``` bash
+docker build . -t stifstof/coffeemqttserver:latest
+```
+
+Try again
+
+``` bash
+docker-compose up
+```
