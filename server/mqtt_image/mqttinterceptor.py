@@ -9,7 +9,7 @@ import mysql.connector as mysql
 
 
 #DB_HOST = "127.0.0.1" # local
-DB_HOST = "172.19.0.2" # compose
+DB_HOST = "172.100.18.3" # compose
 DB_PORT = 3306
 DB_USER = "root"
 DB_PASSWORD = "root"

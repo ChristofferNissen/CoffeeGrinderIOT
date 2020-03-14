@@ -2,28 +2,63 @@
 version: '3.3'
 
 networks:
-  main:
-
+  coffee_net:
+    driver: bridge
+    driver_opts:
+      com.docker.network.enable_ipv6: "false"
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.100.18.0/24
+        
 services:
   
   mqttimage:
     image: stifstof/coffeemqttserver:latest
-    container_name: mqttcontainer
+    container_name: coffee_mqttcontainer
     restart: always
     networks:
-      - main
+      coffee_net:
+        ipv4_address: 172.100.18.2
     depends_on:
       - sqlimage
     ports:
         - '1883:1883' #mqtt
-        - '80:80' #http, maybe needed for a quick visualization option
+        - '5000:5000'
 
   sqlimage:
     image: stifstof/coffeesql:latest
-    container_name: coffeesqlcontainer
+    container_name: coffee_sqlcontainer
+    restart: always
     networks:
-      - main
+      coffee_net:
+        ipv4_address: 172.100.18.3
     ports:
       - '3306:3306'
     environment:
         - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - coffee-datavolume:/var/lib/mysql
+
+  prometheus:
+    image: prom/prometheus
+    container_name: coffee_prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      coffee_net:
+        ipv4_address: 172.100.18.4
+
+  grafana:
+    image: grafana/grafana:4.5.2
+    container_name: coffee_grafana
+    ports:
+      - "3000:3000"  
+    networks:
+      coffee_net:
+        ipv4_address: 172.100.18.5
+
+volumes:
+  coffee-datavolume:

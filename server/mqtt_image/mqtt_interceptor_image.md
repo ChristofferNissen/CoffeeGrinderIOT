@@ -14,6 +14,12 @@ Push the image by
 docker push stifstof/coffeemqttserver:latest
 ```
 
+Build&push
+
+```bash
+docker build . -t stifstof/coffeemqttserver:latest; docker push stifstof/coffeemqttserver:latest
+```
+
 Optionally, run the image by 
 
 ``` bash
