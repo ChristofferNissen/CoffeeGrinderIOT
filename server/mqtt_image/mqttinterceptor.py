@@ -4,6 +4,36 @@ import paho.mqtt.client as mqtt
 import time
 import datetime
 
+from prometheus_client import Counter, Gauge, Histogram
+from prometheus_client import generate_latest
+import psutil
+
+from flask import Flask
+from flask import Response
+from waitress import serve
+
+
+CPU_GAUGE = Gauge(
+    "coffeeserver_cpu_load_percent", "Current load of the CPU in percent."
+)
+REPONSE_COUNTER = Counter(
+    "coffeeserver_http_responses_total", "The count of HTTP responses sent."
+)
+REQ_DURATION_SUMMARY = Histogram(
+    "coffeeserver_request_duration_milliseconds", "Request duration distribution."
+)
+
+app = Flask(__name__)
+
+
+# Add /metrics route for Prometheus to scrape
+@app.route("/metrics/")
+def metrics():
+    return Response(
+        generate_latest(), mimetype="text/plain; version=0.0.4; charset=utf-8"
+    )
+
+
 #  from mysql import connector as conn
 import mysql.connector as mysql
 
@@ -81,7 +111,7 @@ def create_grindtypes_in_db():
     db = connect_db()
     existing_entries_count = execute_query("SELECT COUNT(*) FROM Grinds", db)
 
-    print("Count:", existing_entries_count[0]['COUNT(*)'])
+    print("Types of Grinds registered:", existing_entries_count[0]['COUNT(*)'])
 
     if not existing_entries_count[0]['COUNT(*)'] > 0:
         print("Creating initial grind types in database...")
@@ -153,6 +183,9 @@ def on_connect(client, userdata, flags, rc):
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
     """MQTT Callback when message is recieved"""
+    CPU_GAUGE.set(psutil.cpu_percent())
+    start_time = time.time()
+
     m_in=json.loads(msg.payload)
     db = connect_db()
     # https://stackoverflow.com/questions/42731998/how-to-publish-json-data-on-mqtt-broker-in-python
@@ -179,13 +212,17 @@ def on_message(client, userdata, msg):
     
     print("Database update done")
 
+    REPONSE_COUNTER.inc()
+    t_elapsed_ms = (time.time() - start_time) * 1000
+    REQ_DURATION_SUMMARY.observe(t_elapsed_ms)
+
     db.close()
     
 
 
 # main
-print("Waiting for db container to be ready. Sleeping for 20 seconds")
-time.sleep(20)
+# print("Waiting for db container to be ready. Sleeping for 20 seconds")
+# time.sleep(20)
 
 print("Setting up db..")
 create_grindtypes_in_db()
@@ -206,4 +243,16 @@ print("MQTT ready")
 # handles reconnecting.
 # Other loop*() functions are available that give a threaded interface and a
 # manual interface.
-client.loop_forever()
+client.loop_start()
+
+@app.route("/")
+def main():
+    return "Welcome1"
+
+# start webserer for prometheus
+if __name__ == "__main__":
+   serve(app, port=5000)
+
+while True: 
+    continue
+

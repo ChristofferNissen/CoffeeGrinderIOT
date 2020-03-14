@@ -1,3 +1,4 @@
+
 astroid==2.3.3
 Events==0.3
 googleapis-common-protos==1.51.0
@@ -15,4 +16,7 @@ typed-ast==1.4.1
 wrapt==1.11.2
 mysql-connector==2.2.9
 prometheus_client==0.7.1
+waitress==1.4.3
+Flask==1.1.1
+psutil==5.7.0
 

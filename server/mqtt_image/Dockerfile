@@ -1,4 +1,4 @@
-FROM python:3.8.2-slim-buster
+FROM python:3.8.2-buster
 EXPOSE 1883
 EXPOSE 5000
 
@@ -8,7 +8,7 @@ COPY requirements.txt /mqttserver/
 
 WORKDIR /mqttserver
 
-RUN pip install -r requirements.txt
+RUN pip3 install -r requirements.txt
 
 COPY mqttinterceptor.py /mqttserver/
 

@@ -6,3 +6,5 @@ However,
 after getting the iot_rsa key from @niss which should be placed in ~/.ssh/ folder, run ``` vagrant provision ```
 
 this will take the content of server, and rsync it to the remote vm, and reexecute the docker-compose script. That should be it :-)
+
+To login to the remote server ``` vagrant ssh ``` from server folder
