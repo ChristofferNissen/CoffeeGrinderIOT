@@ -7,12 +7,9 @@ import datetime
 #  from mysql import connector as conn
 import mysql.connector as mysql
 
-# TODO change...
-# mysqldb connection
-# DB_HOST = "mt_mysql"
 
 #DB_HOST = "127.0.0.1" # local
-DB_HOST = "172.18.0.2" # compose
+DB_HOST = "172.19.0.2" # compose
 DB_PORT = 3306
 DB_USER = "root"
 DB_PASSWORD = "root"
@@ -32,11 +29,13 @@ def connect_db():
     )
 
 def execute_query_no_result(query, db):
+    """Executes a query in datebase and discard result"""
     cur = db.cursor(dictionary=True, buffered=True)
     cur.execute(query)
     db.commit()
 
 def execute_query(query, db, one=False):
+    """Executes a query in datebase and returns either one or all rows"""
     cur = db.cursor(dictionary=True, buffered=True)
     cur.execute(query)
     db.commit()
@@ -47,8 +46,8 @@ def execute_query(query, db, one=False):
     # return either the first row or all rows
     return (rv[0] if rv else None) if one else rv
 
-def get_grindtypes_in_db(db):
-    # db = connect_db()
+def get_grinds_in_db(db):
+    """Queries and prints all rows from Grinds table"""
     query = """SELECT * FROM Grinds
         ORDER BY Grinds.Duration ASC LIMIT {}""".format(10)
     grinds = execute_query(query, db)
@@ -60,10 +59,9 @@ def get_grindtypes_in_db(db):
         filtered_msg['Duration'] = msg['Duration']
         print(filtered_msg)
 
-    # db.close()
-
-def get_records_in_db(db):
-    # db = connect_db()
+def get_records_in_db():
+    """Queries and prints all rows from Records table"""
+    db = connect_db()
     query = """SELECT * FROM Records
         LIMIT {}""".format(10)
     grinds = execute_query(query, db)
@@ -76,7 +74,10 @@ def get_records_in_db(db):
         filtered_msg['Count'] = msg['Count']
         print(filtered_msg)
 
+    db.close()
+
 def create_grindtypes_in_db():
+    """Makes sure our GrindTypes are defined in database"""
     db = connect_db()
     existing_entries_count = execute_query("SELECT COUNT(*) FROM Grinds", db)
 
@@ -108,11 +109,12 @@ def create_grindtypes_in_db():
         execute_query_no_result(fail_query, db)  # 4
 
     else: 
-        get_grindtypes_in_db(db)
+        get_grinds_in_db(db)
 
     db.close()
 
 def update_db(db, grind, number):
+    """Updates database by added number to existing row or create new if first of the day"""
     # check if entry for today exists
     today = datetime.date.today()
     # print(today)
@@ -137,6 +139,7 @@ def update_db(db, grind, number):
 
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
+    """MQTT Callback when connection is established"""
     print("Connected with result code "+str(rc))
 
     # Subscribing in on_connect() means that if we lose the connection and
@@ -149,6 +152,7 @@ def on_connect(client, userdata, flags, rc):
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
+    """MQTT Callback when message is recieved"""
     m_in=json.loads(msg.payload)
     db = connect_db()
     # https://stackoverflow.com/questions/42731998/how-to-publish-json-data-on-mqtt-broker-in-python
@@ -180,15 +184,13 @@ def on_message(client, userdata, msg):
 
 
 # main
-print("Waiting for db container to be ready. Sleeping for 30 seconds")
-time.sleep(30)
+print("Waiting for db container to be ready. Sleeping for 20 seconds")
+time.sleep(20)
 
-db = connect_db()
 print("Setting up db..")
 create_grindtypes_in_db()
-get_records_in_db(db)
+get_records_in_db()
 print("db ready")
-db.close()
 
 print("Setting up MQTT")
 client = mqtt.Client()
