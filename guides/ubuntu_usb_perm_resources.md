@@ -1,4 +1,4 @@
-# To get ubuntu permissions: 
+# To get ubuntu permissions for usb on Ubuntu: 
 
 https://forum.arduino.cc/index.php?topic=49623.0
 
