@@ -1,0 +1,68 @@
+
+Vagrant.configure("2") do |config|
+  config.vm.box = 'digital_ocean'
+  config.vm.box_url = "https://github.com/devopsgroup-io/vagrant-digitalocean/raw/master/box/digital_ocean.box"
+  # config.ssh.private_key_path = '~/.ssh/iot_rsa'
+
+  (1..1).each do |machine| 
+    config.vm.define "coffeeserver#{machine}", primary: true do |server|
+      server.vm.provider :digital_ocean do |provider,  override|
+        override.ssh.private_key_path = '~/.ssh/iot_rsa'
+        provider.ssh_key_name = 'iot_rsa'
+        provider.token = '8b3b8816a155df8e09e8e2b124eb3c9ff1d145457145abe13f8a33a7fa38670a'
+        provider.image = 'docker-18-04'
+        provider.region = 'fra1'
+        provider.size = '1gb'
+        provider.private_networking = true
+        provider.monitoring = true
+      end
+
+      server.vm.synced_folder ".", "/vagrant", type: "rsync"
+      server.vm.hostname = "coffeeserver"
+      server.vm.provision "shell", inline: <<-SHELL
+
+        # set timezone correctly
+        unlink /etc/localtime
+        ln -s /usr/share/zoneinfo/Europe/Copenhagen /etc/localtime
+        
+        # system update
+        apt-get update
+        apt-get upgrade -y
+
+        echo -e "\nVerifying that docker works ...\n"
+        docker run --rm hello-world
+        docker rmi hello-world
+    
+        echo -e "\nOpening ports ...\n"
+        ufw allow 1883 # mqtt
+        ufw allow 9090 # prometheus
+        ufw allow 3306 # mysql
+        ufw allow 3000 # grafana
+    
+        echo -e "\nStarting docker-compose ...\n"
+        cd /vagrant
+        docker-compose up -d
+    
+        echo -e "\nVagrant setup done ..."
+        echo -e "coffee_server should be accessible at http://$(hostname -I | awk '{print $1}'):3000"
+  
+      SHELL
+    end
+  end
+end
+  
+# Vagrant.configure('2') do |config|
+
+#   config.vm.define "droplet1" do |config|
+#       config.vm.provider :digital_ocean do |provider, override|
+#         override.ssh.private_key_path = './id_rsa'
+#         override.vm.box = 'digital_ocean'
+#         override.vm.box_url = "https://github.com/devopsgroup-io/vagrant-digitalocean/raw/master/box/digital_ocean.box"
+#         provider.token = "9fa1ff591066f7ea1e734e9653b96cc40e499840834268601dcaab734c4b6952"
+#         provider.image = 'docker-18-04'
+#         provider.region = 'nyc1'
+#         provider.size = '512mb'
+#       end
+#   end
+# end
+  
