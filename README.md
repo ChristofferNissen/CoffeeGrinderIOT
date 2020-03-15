@@ -19,9 +19,9 @@ To utilize IAC we have created a docker image that preloads our data sources and
 
 - Python MQTT Interceptor in mqtt_image/
 
-To read messages from TheThingsNetwork MQTT Broker we created a Python script that parses the massages as they are sent from the device. To connect to the network, we utilize MQTT Mosquitto. 
+  To read messages from TheThingsNetwork MQTT Broker we created a Python script that parses the massages as they are sent from the device. To connect to the network, we utilize MQTT Mosquitto. 
 
-To allow prometheus to scrape the application, we also included a webserver 
+  To allow prometheus to scrape the application, we also included a webserver 
 
 - mysql 
 
@@ -29,7 +29,7 @@ MySQL image with preloaded database schema
 
 - (DockerHub) Prometheus
 
-Prebuild Prometheus docker image
+  Prebuild Prometheus docker image
 
 ## Building the images
 
