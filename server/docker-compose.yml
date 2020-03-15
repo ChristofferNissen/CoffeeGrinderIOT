@@ -12,6 +12,18 @@ networks:
       - subnet: 172.100.18.0/24
         
 services:
+
+  botimage:
+    image: stifstof/coffeebot:latest
+    container_name: coffee_botcontainer
+    restart: always
+    networks: 
+      coffee_net: 
+        ipv4_address: 172.100.18.6
+    depends_on:
+      - mqttimage
+    ports:
+      - '1884:1883' # mqtt
   
   mqttimage:
     image: stifstof/coffeemqttserver:latest

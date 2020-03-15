@@ -183,6 +183,7 @@ def on_connect(client, userdata, flags, rc):
     # reconnect then subscriptions will be renewed.
     # client.subscribe("$SYS/#")
     client.subscribe('+/devices/+/up')
+    client.subscribe('+/devices/+/down')
     client.subscribe('+/devices/#')
     # client.subscribe('my/topic')
 

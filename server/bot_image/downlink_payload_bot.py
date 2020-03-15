@@ -11,5 +11,7 @@ mqtt_client = ttn.HandlerClient(app_id, access_key).data()
 
 # using mqtt client
 while True:
+  time.sleep(5)
   mqtt_client.send("coffeegrinderdevice", base64.encodebytes(bytes(''.join(random.choice(letters) for i in range(6)), 'utf-8')).decode(), port=1, sched="replace")
-  time.sleep(60000)
+  ##time.sleep(60000) # 16 hours
+  time.sleep(300) # 5 minutes
