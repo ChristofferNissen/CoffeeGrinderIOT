@@ -16,41 +16,16 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 1,
   "links": [],
   "panels": [
     {
-      "datasource": null,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 0
-      },
-      "id": 17,
-      "title": "Row title",
-      "type": "row"
-    },
-    {
-      "datasource": null,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 1
-      },
-      "id": 15,
-      "title": "Row title",
-      "type": "row"
-    },
-    {
-      "content": "\n# Welcome to out Coffee Grinder Dashboard!\n\nHere you should be able to find relevant data for the daily operations of the device\n\n\n",
+      "content": "\n# Welcome to our Coffee Grinder Dashboard!\n\nHere you should be able to find relevant data for the daily operations of the device\n\n\n",
       "datasource": null,
       "gridPos": {
         "h": 4,
         "w": 24,
         "x": 0,
-        "y": 2
+        "y": 0
       },
       "id": 8,
       "mode": "markdown",
@@ -72,11 +47,11 @@
         "h": 10,
         "w": 24,
         "x": 0,
-        "y": 6
+        "y": 4
       },
       "hiddenSeries": false,
       "id": 2,
-      "interval": "30s",
+      "interval": "1m",
       "legend": {
         "avg": false,
         "current": false,
@@ -147,7 +122,7 @@
         "name": null,
         "show": true,
         "values": [
-          "min"
+          "count"
         ]
       },
       "yaxes": [
@@ -179,9 +154,9 @@
       "datasource": "CoffeeMqttSource",
       "gridPos": {
         "h": 6,
-        "w": 6,
-        "x": 3,
-        "y": 16
+        "w": 5,
+        "x": 0,
+        "y": 14
       },
       "id": 4,
       "options": {
@@ -239,7 +214,7 @@
         "h": 8,
         "w": 12,
         "x": 11,
-        "y": 16
+        "y": 14
       },
       "hiddenSeries": false,
       "id": 6,
@@ -338,99 +313,10 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 24
-      },
-      "id": 12,
-      "interval": null,
-      "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "$$hashKey": "object:2146",
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "$$hashKey": "object:2147",
-          "name": "range to text",
-          "value": 2
-        }
-      ],
-      "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "pluginVersion": "6.7.0-beta1",
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "50%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": false,
-        "ymax": null,
-        "ymin": null
-      },
-      "tableColumn": "",
-      "targets": [
-        {
-          "expr": "coffeeserver_last_communication*1000",
-          "instant": false,
-          "interval": "15s",
-          "legendFormat": "",
-          "refId": "A"
-        }
-      ],
-      "thresholds": "",
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Last message recieved on",
-      "type": "singlestat",
-      "valueFontSize": "80%",
-      "valueMaps": [
-        {
-          "$$hashKey": "object:2149",
-          "op": "=",
-          "text": "N/A",
-          "value": "null"
-        }
-      ],
-      "valueName": "current"
-    },
-    {
-      "cacheTimeout": null,
-      "colorBackground": false,
-      "colorValue": false,
-      "colors": [
-        "#299c46",
-        "rgba(237, 129, 40, 0.89)",
-        "#d44a3a"
-      ],
-      "datasource": "CoffeeMqttSource",
-      "format": "dateTimeFromNow",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 32
+        "h": 6,
+        "w": 5,
+        "x": 12,
+        "y": 22
       },
       "id": 13,
       "interval": null,
@@ -476,7 +362,7 @@
         {
           "expr": "coffeeserver_last_communication*1000",
           "instant": false,
-          "interval": "15s",
+          "interval": "",
           "legendFormat": "",
           "refId": "A"
         }
@@ -496,6 +382,95 @@
         }
       ],
       "valueName": "current"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
+      "datasource": "CoffeeMqttSource",
+      "format": "dateTimeFromNow",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 17,
+        "y": 22
+      },
+      "id": 12,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "$$hashKey": "object:2146",
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "$$hashKey": "object:2147",
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "pluginVersion": "6.7.0-beta1",
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false,
+        "ymax": null,
+        "ymin": null
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "expr": "coffeeserver_last_communication",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "thresholds": "",
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Last message recieved on",
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "$$hashKey": "object:2149",
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "last_time"
     }
   ],
   "refresh": "5s",
