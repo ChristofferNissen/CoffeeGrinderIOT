@@ -35,6 +35,7 @@ Vagrant.configure("2") do |config|
     
         echo -e "\nOpening ports ...\n"
         ufw allow 1883 # mqtt
+        ufw allow 1884
         ufw allow 9090 # prometheus
         ufw allow 3306 # mysql
         ufw allow 3000 # grafana
@@ -44,7 +45,7 @@ Vagrant.configure("2") do |config|
         docker-compose up -d
     
         echo -e "\nVagrant setup done ..."
-        echo -e "coffee_server should be accessible at http://$(hostname -I | awk '{print $1}'):3000"
+        echo -e "coffee_server dashboard should be accessible at http://$(hostname -I | awk '{print $1}'):3000"
   
       SHELL
     end
