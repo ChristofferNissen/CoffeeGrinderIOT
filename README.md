@@ -39,7 +39,7 @@ For convinience i included a script ```build_docker_images.sh```
 
 ## Docker-Compose
 
-The server is intended to be used with ```docker-compose up``` and ```docker-compose down``
+The server is intended to be used with ```docker-compose up``` and ```docker-compose down```
 
 The file contains a volume for grafana and mysql, so those containers have persistent storage
 
