@@ -1,4 +1,5 @@
 import time
+import base64
 import ttn
 from random import randint
 
@@ -17,6 +18,8 @@ bytes = [
 # using mqtt client
 while True:
   mqtt_client.connect()
-  mqtt_client.send("coffeegrinderdevice", bytes[randint(0, len(bytes) - 1)], port=1, sched="replace")
+  payload = bytes[randint(0, len(bytes) - 1)]
+  print("Sending", base64.b64decode(payload))
+  mqtt_client.send("coffeegrinderdevice", payload, port=1, sched="replace")
   mqtt_client.close()
   time.sleep(600)  # every 10 minutes

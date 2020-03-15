@@ -19,13 +19,95 @@
   "links": [],
   "panels": [
     {
-      "content": "\n# Welcome to our IOT Coffee Grinder Dashboard! \n\nHere you should be able to find relevant data for the daily operations of the device\n\n\n",
+      "collapsed": true,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 22,
+      "panels": [
+        {
+          "datasource": "CoffeeMqttSource",
+          "gridPos": {
+            "h": 6,
+            "w": 5,
+            "x": 0,
+            "y": 1
+          },
+          "id": 4,
+          "interval": "1m",
+          "options": {
+            "fieldOptions": {
+              "calcs": [
+                "mean"
+              ],
+              "defaults": {
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": [],
+              "values": false
+            },
+            "orientation": "auto",
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true
+          },
+          "pluginVersion": "6.7.0-beta1",
+          "targets": [
+            {
+              "expr": "coffeeserver_cpu_load_percent",
+              "interval": "15s",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "CPU Load on server",
+          "transparent": true,
+          "type": "gauge"
+        }
+      ],
+      "title": "Server Hardware Monitoring",
+      "type": "row"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 1
+      },
+      "id": 20,
+      "panels": [],
+      "title": "Overview",
+      "type": "row"
+    },
+    {
+      "content": "\n# Welcome to our IOT Coffee Grinder Dashboard! \n\n\nHere you should be able to find relevant data for the daily operations of the device\n\n\n",
       "datasource": null,
       "gridPos": {
         "h": 4,
         "w": 24,
         "x": 0,
-        "y": 0
+        "y": 2
       },
       "id": 8,
       "mode": "markdown",
@@ -47,7 +129,7 @@
         "h": 10,
         "w": 24,
         "x": 0,
-        "y": 4
+        "y": 6
       },
       "hiddenSeries": false,
       "id": 2,
@@ -82,7 +164,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT  NOW() AS \"time\", g.GrindName AS metric, r.Count AS value\nFROM Records r, Grinds g\nWHERE g.Id = r.Grind AND r.Date = CURDATE() \nORDER BY g.Id",
+          "rawSql": "SELECT  NOW() AS \"time\", g.GrindName AS metric, r.Count AS value\nFROM Records r, Grinds g\nWHERE g.Id = r.Id AND r.Date = CURDATE()\nORDER BY r.Id ASC\n",
           "refId": "A",
           "select": [
             [
@@ -151,57 +233,18 @@
       }
     },
     {
-      "datasource": "CoffeeMqttSource",
+      "collapsed": false,
+      "datasource": null,
       "gridPos": {
-        "h": 6,
-        "w": 5,
+        "h": 1,
+        "w": 24,
         "x": 0,
-        "y": 14
+        "y": 16
       },
-      "id": 4,
-      "interval": "1m",
-      "options": {
-        "fieldOptions": {
-          "calcs": [
-            "mean"
-          ],
-          "defaults": {
-            "mappings": [],
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "green",
-                  "value": null
-                },
-                {
-                  "color": "red",
-                  "value": 80
-                }
-              ]
-            }
-          },
-          "overrides": [],
-          "values": false
-        },
-        "orientation": "auto",
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true
-      },
-      "pluginVersion": "6.7.0-beta1",
-      "targets": [
-        {
-          "expr": "coffeeserver_cpu_load_percent",
-          "interval": "15s",
-          "legendFormat": "",
-          "refId": "A"
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "CPU Load on server",
-      "transparent": true,
-      "type": "gauge"
+      "id": 24,
+      "panels": [],
+      "title": "Requests",
+      "type": "row"
     },
     {
       "aliasColors": {},
@@ -214,8 +257,8 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 11,
-        "y": 14
+        "x": 0,
+        "y": 17
       },
       "hiddenSeries": false,
       "id": 6,
@@ -315,13 +358,13 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 6,
-        "w": 5,
+        "h": 8,
+        "w": 6,
         "x": 12,
-        "y": 22
+        "y": 17
       },
       "id": 13,
-      "interval": "1m",
+      "interval": "10s",
       "links": [],
       "mappingType": 1,
       "mappingTypes": [
@@ -404,13 +447,13 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 6,
+        "h": 8,
         "w": 6,
-        "x": 17,
-        "y": 22
+        "x": 18,
+        "y": 17
       },
       "id": 12,
-      "interval": "1m",
+      "interval": "10s",
       "links": [],
       "mappingType": 1,
       "mappingTypes": [
@@ -451,7 +494,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "coffeeserver_last_communication",
+          "expr": "coffeeserver_last_communication*1000",
           "instant": false,
           "interval": "",
           "legendFormat": "",
@@ -473,6 +516,251 @@
         }
       ],
       "valueName": "last_time"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 25
+      },
+      "id": 18,
+      "panels": [],
+      "title": "MySQL Tables",
+      "type": "row"
+    },
+    {
+      "columns": [],
+      "datasource": "MySql",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 26
+      },
+      "id": 15,
+      "pageSize": null,
+      "showHeader": true,
+      "sort": {
+        "col": 0,
+        "desc": true
+      },
+      "styles": [
+        {
+          "$$hashKey": "object:122",
+          "alias": "Time",
+          "align": "auto",
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "pattern": "Time",
+          "type": "date"
+        },
+        {
+          "$$hashKey": "object:123",
+          "alias": "",
+          "align": "right",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 2,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT g.GrindName AS GrindName, r.Count AS Number\nFROM Records r, Grinds g\nWHERE g.Id = r.Id AND r.Date = CURDATE()\nORDER BY r.Id ASC\n",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Grinds Table (Today)",
+      "transform": "table",
+      "type": "table"
+    },
+    {
+      "columns": [],
+      "datasource": "MySql",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 16,
+        "w": 9,
+        "x": 6,
+        "y": 26
+      },
+      "id": 25,
+      "pageSize": null,
+      "showHeader": true,
+      "sort": {
+        "col": 0,
+        "desc": true
+      },
+      "styles": [
+        {
+          "$$hashKey": "object:122",
+          "alias": "Time",
+          "align": "auto",
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "pattern": "Time",
+          "type": "date"
+        },
+        {
+          "$$hashKey": "object:123",
+          "alias": "",
+          "align": "right",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 2,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT g.Id as Id, g.GrindName AS GrindName, g.Duration AS Duration\nFROM Grinds g\nORDER BY g.Id ASC\n",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Grinds Table",
+      "transform": "table",
+      "type": "table"
+    },
+    {
+      "columns": [],
+      "datasource": "MySql",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 16,
+        "w": 9,
+        "x": 15,
+        "y": 26
+      },
+      "id": 16,
+      "pageSize": null,
+      "showHeader": true,
+      "sort": {
+        "col": 0,
+        "desc": true
+      },
+      "styles": [
+        {
+          "$$hashKey": "object:122",
+          "alias": "Time",
+          "align": "auto",
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "pattern": "Time",
+          "type": "date"
+        },
+        {
+          "$$hashKey": "object:123",
+          "alias": "",
+          "align": "right",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 2,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT r.Date as Date, g.GrindName AS GrindName, r.Count AS Number\nFROM Records r, Grinds g\nWHERE g.Id = r.Id AND r.Date = CURDATE()\nORDER BY r.Id ASC\n",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Records Table",
+      "transform": "table",
+      "type": "table"
     }
   ],
   "refresh": "5s",
