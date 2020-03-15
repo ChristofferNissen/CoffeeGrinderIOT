@@ -21,8 +21,8 @@ Save & test.
 8. Add query, click edit SQL, paste this:
 SELECT  NOW() AS "time", g.GrindName AS metric, r.Count AS value
 FROM Records r, Grinds g
-WHERE g.ID = r.ID
-ORDER BY r.ID
+WHERE g.Id = r.Grind AND r.Date = CURDATE() 
+ORDER BY g.Id
 
 9. Set format as: Timeseries
 10. On visualization tab set x-axis mode: series (in this step you should see nice bar chart)
