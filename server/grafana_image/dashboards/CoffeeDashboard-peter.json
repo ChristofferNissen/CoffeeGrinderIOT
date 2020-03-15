@@ -82,7 +82,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT  NOW() AS \"time\", g.GrindName AS metric, r.Count AS value\nFROM Records r, Grinds g\nWHERE g.Id = r.Id\nORDER BY r.Id\n",
+          "rawSql": "SELECT  NOW() AS \"time\", g.GrindName AS metric, r.Count AS value\nFROM Records r, Grinds g\nWHERE g.Id = r.Grind AND r.Date = CURDATE() \nORDER BY g.Id",
           "refId": "A",
           "select": [
             [

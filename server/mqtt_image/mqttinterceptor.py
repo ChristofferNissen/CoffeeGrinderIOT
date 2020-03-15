@@ -1,19 +1,23 @@
 import json
 import base64
-import paho.mqtt.client as mqtt
 import time
 import datetime
 
+# MQTT Mosquitto
+import paho.mqtt.client as mqtt
+
+# prometheus dependencies
 from prometheus_client import Counter, Gauge, Histogram
 from prometheus_client import generate_latest
 import psutil
 
+# webserver for prometheus scaraping endpoint /metrics/
 from flask import Flask
 from flask import Response
 from waitress import serve
 
 
-# PROMETHEUS
+# PROMETHEUS Metrics 
 CPU_GAUGE = Gauge(
     "coffeeserver_cpu_load_percent", "Current load of the CPU in percent."
 )
@@ -27,6 +31,7 @@ REQ_DURATION_SUMMARY = Histogram(
     "coffeeserver_request_duration_milliseconds", "Request duration distribution."
 )
 
+# Flask setup
 app = Flask(__name__)
 
 # Add /metrics route for Prometheus to scrape
@@ -181,7 +186,6 @@ def on_connect(client, userdata, flags, rc):
 
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
-    # client.subscribe("$SYS/#")
     client.subscribe('+/devices/+/up')
     client.subscribe('+/devices/+/down')
     client.subscribe('+/devices/#')
@@ -197,11 +201,18 @@ def on_message(client, userdata, msg):
     m_in=json.loads(msg.payload)
     db = connect_db()
     # https://stackoverflow.com/questions/42731998/how-to-publish-json-data-on-mqtt-broker-in-python
-    payload = m_in['payload_raw']
+    
+    if m_in.get('message') == None:
+        # up messages from device
+        payload = m_in['payload_raw']
+    else:
+        # down messages from bot to simulate traffic in light of COVID-19
+        payload = m_in['message']['payload_raw']
+    
     bts = base64.b64decode(payload)
 
-    seconds = time.time().__add__(1) # add one hour
-    HEARTBEAT_GAUGE.set(round(seconds))
+    seconds = time.time().__add__(1) # add one hour for Copenhagen
+    HEARTBEAT_GAUGE.set(seconds)
     local_time = time.ctime(seconds)
     print("New Message intercepted:", local_time)
     print("Failure", bts[3])
@@ -247,23 +258,12 @@ client.username_pw_set("coffeegrinderiot", "ttn-account-v2.w7h8rh58UWJYy6t_dyzD_
 client.connect("eu.thethings.network", 1883, 60)
 
 print("MQTT ready")
-
-# Blocking call that processes network traffic, dispatches callbacks and
-# handles reconnecting.
-# Other loop*() functions are available that give a threaded interface and a
-# manual interface.
-# client.loop_forever()
-
 client.loop_start()
 
 @app.route("/")
 def main():
-    return "Welcome1"
+    return "Dashboard available on port 3000 and Prometheus on port 9090"
 
 # start webserer for prometheus
 if __name__ == "__main__":
    serve(app, port=5000)
-
-# while True: 
-#     continue
-
