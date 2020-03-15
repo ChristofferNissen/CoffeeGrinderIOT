@@ -24,6 +24,6 @@ scrape_configs:
     scrape_interval: 5s
 
     static_configs:
-      - targets: ['mqttcontainer:5000']
+      - targets: ['coffee_mqttcontainer:5000']
         labels:
           group: 'production'

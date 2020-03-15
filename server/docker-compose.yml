@@ -43,6 +43,7 @@ services:
   prometheus:
     image: prom/prometheus
     container_name: coffee_prometheus
+    restart: always
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
@@ -52,13 +53,17 @@ services:
         ipv4_address: 172.100.18.4
 
   grafana:
-    image: grafana/grafana:4.5.2
+    image: stifstof/iotgrafana:latest
     container_name: coffee_grafana
+    restart: always
     ports:
       - "3000:3000"  
     networks:
       coffee_net:
         ipv4_address: 172.100.18.5
+    volumes:
+      - grafana-storage:/var/lib/grafana
 
 volumes:
   coffee-datavolume:
+  grafana-storage:

@@ -13,8 +13,12 @@ from flask import Response
 from waitress import serve
 
 
+# PROMETHEUS
 CPU_GAUGE = Gauge(
     "coffeeserver_cpu_load_percent", "Current load of the CPU in percent."
+)
+HEARTBEAT_GAUGE = Gauge(
+    "coffeeserver_last_communication", "Timestamp indicating last recieved message"
 )
 REPONSE_COUNTER = Counter(
     "coffeeserver_http_responses_total", "The count of HTTP responses sent."
@@ -25,7 +29,6 @@ REQ_DURATION_SUMMARY = Histogram(
 
 app = Flask(__name__)
 
-
 # Add /metrics route for Prometheus to scrape
 @app.route("/metrics/")
 def metrics():
@@ -33,10 +36,14 @@ def metrics():
         generate_latest(), mimetype="text/plain; version=0.0.4; charset=utf-8"
     )
 
+@app.before_request
+def before_request():
+    # record system info before prometheus pull
+    CPU_GAUGE.set(psutil.cpu_percent())
 
-#  from mysql import connector as conn
+
+# DATABASE
 import mysql.connector as mysql
-
 
 #DB_HOST = "127.0.0.1" # local
 DB_HOST = "172.100.18.3" # compose
@@ -193,6 +200,7 @@ def on_message(client, userdata, msg):
     bts = base64.b64decode(payload)
 
     seconds = time.time().__add__(1) # add one hour
+    HEARTBEAT_GAUGE.set(round(seconds))
     local_time = time.ctime(seconds)
     print("New Message intercepted:", local_time)
     print("Failure", bts[3])
@@ -209,20 +217,20 @@ def on_message(client, userdata, msg):
         update_db(db, 3, bts[2])
     if bts[3] > 0: 
         update_db(db, 4, bts[3])
-    
-    print("Database update done")
 
     REPONSE_COUNTER.inc()
     t_elapsed_ms = (time.time() - start_time) * 1000
     REQ_DURATION_SUMMARY.observe(t_elapsed_ms)
+
+    print("Database update done")
 
     db.close()
     
 
 
 # main
-# print("Waiting for db container to be ready. Sleeping for 20 seconds")
-# time.sleep(20)
+print("Waiting for db container to be ready. Sleeping for 20 seconds")
+time.sleep(20)
 
 print("Setting up db..")
 create_grindtypes_in_db()
@@ -243,6 +251,8 @@ print("MQTT ready")
 # handles reconnecting.
 # Other loop*() functions are available that give a threaded interface and a
 # manual interface.
+# client.loop_forever()
+
 client.loop_start()
 
 @app.route("/")
@@ -253,6 +263,6 @@ def main():
 if __name__ == "__main__":
    serve(app, port=5000)
 
-while True: 
-    continue
+# while True: 
+#     continue
 

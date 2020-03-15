@@ -1,0 +1,17 @@
+
+apiversion: 1
+
+datasources:
+- name: CoffeeMqttSource
+  type: prometheus
+  access: proxy
+  url: http://172.100.18.4:9090
+  isDefault: true
+  editable: false
+
+- name: MySql
+  type: mysql
+  url: 172.100.18.3:3306
+  database: coffee_database
+  user: root
+  password: root

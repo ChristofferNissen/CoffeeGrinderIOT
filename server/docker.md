@@ -1,5 +1,9 @@
 # How to use our Docker Compose
 
+# TO BUILD ALL IMAGES AND PUSH TO ONCE
+
+execute ```./build_docker_images.sh``` from ./server 
+
 Hi Peto, 
 
 You should be able to run the MQTT server assuming you have Docker and Docker-compose installed:
