@@ -36,7 +36,7 @@ services:
       - sqlimage
     ports:
         - '1883:1883' #mqtt
-        - '5000:5000'
+        # - '5000:5000' #flask
 
   sqlimage:
     image: stifstof/coffeesql:latest

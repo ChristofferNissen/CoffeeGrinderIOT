@@ -1,5 +1,5 @@
 FROM python:3.8.2-buster
-EXPOSE 1884
+EXPOSE 1883
 
 RUN mkdir /botserver
 
