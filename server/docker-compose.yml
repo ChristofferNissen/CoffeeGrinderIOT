@@ -70,13 +70,40 @@ services:
     container_name: coffee_grafana
     restart: always
     ports:
-      - "3000:3000"  
+      - "3000:3000"
     networks:
       coffee_net:
         ipv4_address: 172.100.18.5
     # volumes:
     #   - grafana-storage:/var/lib/grafana
 
+  loki:
+    image: grafana/loki:latest
+    container_name: coffee_loki
+    restart: always
+    volumes:
+      - loki-data:/etc/loki
+      - ./loki.yml:/etc/loki/local-config.yml
+    ports:
+      - "3100:3100"
+      - "9096:9096"
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      coffee_net:
+        ipv4_address: 172.100.18.7
+
+  promtail:
+    image: grafana/promtail:2.3.0
+    container_name: coffee_promtail
+    volumes:
+      - /var/log:/var/log
+      - ./promtail.yml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+        coffee_net:
+          ipv4_address: 172.100.18.8
+
 volumes:
   coffee-datavolume:
   grafana-storage:
+  loki-data:

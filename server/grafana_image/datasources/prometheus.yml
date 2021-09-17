@@ -5,7 +5,7 @@ datasources:
 - name: CoffeeMqttSource
   type: prometheus
   access: proxy
-  url: http://172.100.18.4:9090
+  url: 172.100.18.4:9090
   isDefault: true
   editable: false
 
@@ -15,3 +15,10 @@ datasources:
   database: coffee_database
   user: root
   password: root
+
+- name: Loki
+  type: loki
+  access: proxy
+  url: 172.100.18.7:3100
+  jsonData:
+      maxLines: 1000
