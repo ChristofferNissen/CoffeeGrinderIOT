@@ -26,6 +26,10 @@ services:
         - TZ=Europe/Copenhagen
     volumes:
       - coffee-sqldatavolume:/var/lib/mysql
+    logging:
+      driver: "json-file"
+      options: 
+        tag: "{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}"
 
   mqttimage:
     depends_on:
@@ -41,6 +45,10 @@ services:
         - 5000:5000 #flask
     volumes:
       - ./logs:/var/log
+    logging:
+      driver: "json-file"
+      options: 
+        tag: "{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}"
 
   botimage:
     depends_on:
@@ -53,6 +61,10 @@ services:
     networks: 
       coffee_net: 
         ipv4_address: 172.100.18.6
+    logging:
+      driver: "json-file"
+      options: 
+        tag: "{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}"
 
   alertmanager:
     image: prom/alertmanager
@@ -68,6 +80,10 @@ services:
     networks:
       coffee_net:
         ipv4_address: 172.100.18.9
+    logging:
+      driver: "json-file"
+      options: 
+        tag: "{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}"
 
   prometheus:
     depends_on: 
@@ -84,6 +100,10 @@ services:
       coffee_net:
         ipv4_address: 172.100.18.4
     command: --web.enable-lifecycle  --config.file=/etc/prometheus/prometheus.yml
+    logging:
+      driver: "json-file"
+      options: 
+        tag: "{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}"
 
   promtail:
     image: grafana/promtail:2.3.0
@@ -91,7 +111,7 @@ services:
     volumes:
       - ./logs:/var/log
       - ./promtail.yml:/etc/promtail/config.yml
-      - /var/lib/docker/containers/:/var/lib/docker/containers/:ro
+      - /var/lib/docker/containers/:/var/lib/docker/containers/:ro # pass host machines docker logs to the container with READ ONLY permissions
     command: -config.file=/etc/promtail/config.yml
     networks:
         coffee_net:
@@ -100,6 +120,10 @@ services:
       - 9080:9080
       - 3500:3500
       - 3600:3600
+    logging:
+      driver: "json-file"
+      options: 
+        tag: "{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}"
 
   loki:
     image: grafana/loki:2.3.0
@@ -114,6 +138,10 @@ services:
     networks:
       coffee_net:
         ipv4_address: 172.100.18.7
+    logging:
+      driver: "json-file"
+      options: 
+        tag: "{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}"
 
   loki-canary:
     depends_on: 
@@ -149,10 +177,13 @@ services:
     networks:
       coffee_net:
         ipv4_address: 172.100.18.5
+    logging:
+      driver: "json-file"
+      options: 
+        tag: "{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}"
     # volumes:
     #   - ./logs/grafana.log:/var/log/grafana/grafana.log
     # Disabled for sharing with team members due to permission issues with log file locally (sudo chown 472:$USER .logs/grafana.log to fix)
-
 
 volumes:
   coffee-sqldatavolume:
