@@ -15,7 +15,7 @@ services:
   sqlimage:
     image: stifstof/coffeesql:latest
     container_name: coffee_sqlcontainer
-    restart: always
+    restart: unless-stopped
     networks:
       coffee_net:
         ipv4_address: 172.100.18.3
@@ -26,17 +26,13 @@ services:
         - TZ=Europe/Copenhagen
     volumes:
       - coffee-sqldatavolume:/var/lib/mysql
-    # logging:
-    #   driver: loki
-    #   options:
-    #     loki-url: http://172.100.18.8:3500/loki/api/v1/push
 
   mqttimage:
     depends_on:
       - sqlimage
     image: stifstof/coffeemqttserver:latest
     container_name: coffee_mqttcontainer
-    restart: always
+    restart: unless-stopped
     networks:
       coffee_net:
         ipv4_address: 172.100.18.2
@@ -53,7 +49,7 @@ services:
     container_name: coffee_botcontainer
     volumes:
       - ./logs:/var/log
-    restart: always
+    restart: unless-stopped
     networks: 
       coffee_net: 
         ipv4_address: 172.100.18.6
@@ -72,17 +68,13 @@ services:
     networks:
       coffee_net:
         ipv4_address: 172.100.18.9
-    # logging:
-    #   driver: loki
-    #   options:
-    #     loki-url: http://172.100.18.8:3500/loki/api/v1/push
 
   prometheus:
     depends_on: 
       - loki
     image: prom/prometheus
     container_name: coffee_prometheus
-    restart: always
+    restart: unless-stopped
     volumes:
       - ./prometheus:/etc/prometheus
       - prometheus-data:/prometheus
@@ -92,10 +84,6 @@ services:
       coffee_net:
         ipv4_address: 172.100.18.4
     command: --web.enable-lifecycle  --config.file=/etc/prometheus/prometheus.yml
-    # logging:
-    #   driver: loki
-    #   options:
-    #     loki-url: http://172.100.18.8:3500/loki/api/v1/push
 
   promtail:
     image: grafana/promtail:2.3.0
@@ -112,17 +100,11 @@ services:
       - 9080:9080
       - 3500:3500
       - 3600:3600
-    # logging:
-    #   driver: loki
-    #   options:
-    #     loki-url: http://172.100.18.8:3500/loki/api/v1/push
-    #     mode: non-blocking
-    #     max-buffer-size: 4m
 
   loki:
     image: grafana/loki:2.3.0
     container_name: coffee_loki
-    # restart: always
+    restart: unless-stopped
     volumes:
       - ./loki.yml:/etc/loki/local-config.yml
     ports:
@@ -132,12 +114,6 @@ services:
     networks:
       coffee_net:
         ipv4_address: 172.100.18.7
-    # logging:
-    #   driver: loki
-    #   options:
-    #     loki-url: http://172.100.18.8:3500/loki/api/v1/push
-    #     mode: non-blocking
-    #     max-buffer-size: 4m
 
   loki-canary:
     depends_on: 
@@ -161,32 +137,22 @@ services:
       driver: "json-file"
       options: 
         tag: "{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}"
-    # logging:
-    #   driver: loki
-    #   options:
-    #     loki-url: http://172.100.18.8:3500/loki/api/v1/push
-    #     mode: non-blocking
-    #     max-buffer-size: 4m
 
   grafana:
     depends_on: 
       - loki-canary
     image: stifstof/iotgrafana:latest
     container_name: coffee_grafana
-    restart: always
+    restart: unless-stopped
     ports:
       - 3000:3000
     networks:
       coffee_net:
         ipv4_address: 172.100.18.5
-    volumes:
-      - ./logs/grafana.log:/var/log/grafana/grafana.log
-    # logging:
-    #   driver: loki
-    #   options:
-    #     loki-url: http://172.100.18.8:3500/loki/api/v1/push
-    #     mode: non-blocking
-    #     max-buffer-size: 4m
+    # volumes:
+    #   - ./logs/grafana.log:/var/log/grafana/grafana.log
+    # Disabled for sharing with team members due to permission issues with log file locally (sudo chown 472:$USER .logs/grafana.log to fix)
+
 
 volumes:
   coffee-sqldatavolume:
