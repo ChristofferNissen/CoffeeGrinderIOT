@@ -1,7 +1,7 @@
 apiversion: 1
 
 datasources:
-- name: CoffeeMqttSource
+- name: Prometheus
   type: prometheus
   access: proxy
   url: 172.100.18.4:9090

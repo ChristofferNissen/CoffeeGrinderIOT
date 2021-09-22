@@ -1,6 +1,7 @@
 global:
   scrape_interval:     15s # By default, scrape targets every 15 seconds.
   evaluation_interval: 15s # Evaluate rules every 15 seconds.
+  scrape_timeout:      10s
 
   # Attach these extra labels to all timeseries collected by this Prometheus instance.
   external_labels:
@@ -8,6 +9,7 @@ global:
 
 rule_files:
   - 'prometheus.rules.yml'
+  - 'alerts.yml'
 
 scrape_configs:
   - job_name: 'prometheus'
@@ -27,3 +29,9 @@ scrape_configs:
       - targets: ['coffee_mqttcontainer:5000']
         labels:
           group: 'production'
+  - job_name: services
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - 'prometheus:9090'
+          - 'idonotexists:564'

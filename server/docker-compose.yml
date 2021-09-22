@@ -62,7 +62,7 @@ services:
     image: prom/alertmanager
     container_name: coffee_alertmanager
     volumes:
-      - ./config:/prometheus
+      - ./alertmanager.yml:/prometheus/alertmanager.yml
       - ./data/alertmanager:/data
     command:
       - '--config.file=/prometheus/alertmanager.yml'
@@ -84,12 +84,14 @@ services:
     container_name: coffee_prometheus
     restart: always
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus:/etc/prometheus
+      - prometheus-data:/prometheus
     ports:
       - "9090:9090"
     networks:
       coffee_net:
         ipv4_address: 172.100.18.4
+    command: --web.enable-lifecycle  --config.file=/etc/prometheus/prometheus.yml
     # logging:
     #   driver: loki
     #   options:
@@ -188,3 +190,4 @@ services:
 
 volumes:
   coffee-sqldatavolume:
+  prometheus-data:

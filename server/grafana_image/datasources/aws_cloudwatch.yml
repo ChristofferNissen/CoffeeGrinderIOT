@@ -1,8 +1,9 @@
 apiVersion: 1
+
 datasources:
   - name: CloudWatch
     type: cloudwatch
     jsonData:
       authType: default
       assumeRoleArn: arn:aws:iam::949635348593:role/GrafanaAWSCloudWatchPolicy
-      defaultRegion: eu-west-2
+      defaultRegion: eu-central-1

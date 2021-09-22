@@ -1,5 +1,6 @@
 apiversion: 1
 
+datasources:
 - name: MySql
   type: mysql
   url: 172.100.18.3:3306
