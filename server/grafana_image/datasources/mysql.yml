@@ -1,0 +1,8 @@
+apiversion: 1
+
+- name: MySql
+  type: mysql
+  url: 172.100.18.3:3306
+  database: coffee_database
+  user: root
+  password: root

@@ -10,34 +10,8 @@ networks:
       driver: default
       config:
       - subnet: 172.100.18.0/24
-        
+
 services:
-
-  botimage:
-    image: stifstof/coffeebot:latest
-    container_name: coffee_botcontainer
-    restart: always
-    networks: 
-      coffee_net: 
-        ipv4_address: 172.100.18.6
-    depends_on:
-      - mqttimage
-    ports:
-      - '1884:1883' # mqtt
-  
-  mqttimage:
-    image: stifstof/coffeemqttserver:latest
-    container_name: coffee_mqttcontainer
-    restart: always
-    networks:
-      coffee_net:
-        ipv4_address: 172.100.18.2
-    depends_on:
-      - sqlimage
-    ports:
-        - '1883:1883' #mqtt
-        - '5000:5000' #flask
-
   sqlimage:
     image: stifstof/coffeesql:latest
     container_name: coffee_sqlcontainer
@@ -46,14 +20,66 @@ services:
       coffee_net:
         ipv4_address: 172.100.18.3
     ports:
-      - '3306:3306'
+      - 3306:3306
     environment:
         - MYSQL_ROOT_PASSWORD=root
         - TZ=Europe/Copenhagen
     volumes:
-      - coffee-datavolume:/var/lib/mysql
+      - coffee-sqldatavolume:/var/lib/mysql
+    # logging:
+    #   driver: loki
+    #   options:
+    #     loki-url: http://172.100.18.8:3500/loki/api/v1/push
+
+  mqttimage:
+    depends_on:
+      - sqlimage
+    image: stifstof/coffeemqttserver:latest
+    container_name: coffee_mqttcontainer
+    restart: always
+    networks:
+      coffee_net:
+        ipv4_address: 172.100.18.2
+    ports:
+        - 1883:1883 #mqtt
+        - 5000:5000 #flask
+    volumes:
+      - ./logs:/var/log
+
+  botimage:
+    depends_on:
+      - mqttimage
+    image: stifstof/coffeebot:latest
+    container_name: coffee_botcontainer
+    volumes:
+      - ./logs:/var/log
+    restart: always
+    networks: 
+      coffee_net: 
+        ipv4_address: 172.100.18.6
+
+  alertmanager:
+    image: prom/alertmanager
+    container_name: coffee_alertmanager
+    volumes:
+      - ./config:/prometheus
+      - ./data/alertmanager:/data
+    command:
+      - '--config.file=/prometheus/alertmanager.yml'
+      - '--storage.path=/data'
+    ports:
+      - 9093:9093
+    networks:
+      coffee_net:
+        ipv4_address: 172.100.18.9
+    # logging:
+    #   driver: loki
+    #   options:
+    #     loki-url: http://172.100.18.8:3500/loki/api/v1/push
 
   prometheus:
+    depends_on: 
+      - loki
     image: prom/prometheus
     container_name: coffee_prometheus
     restart: always
@@ -64,46 +90,101 @@ services:
     networks:
       coffee_net:
         ipv4_address: 172.100.18.4
-
-  grafana:
-    image: stifstof/iotgrafana:latest
-    container_name: coffee_grafana
-    restart: always
-    ports:
-      - "3000:3000"
-    networks:
-      coffee_net:
-        ipv4_address: 172.100.18.5
-    # volumes:
-    #   - grafana-storage:/var/lib/grafana
-
-  loki:
-    image: grafana/loki:latest
-    container_name: coffee_loki
-    restart: always
-    volumes:
-      - loki-data:/etc/loki
-      - ./loki.yml:/etc/loki/local-config.yml
-    ports:
-      - "3100:3100"
-      - "9096:9096"
-    command: -config.file=/etc/loki/local-config.yaml
-    networks:
-      coffee_net:
-        ipv4_address: 172.100.18.7
+    # logging:
+    #   driver: loki
+    #   options:
+    #     loki-url: http://172.100.18.8:3500/loki/api/v1/push
 
   promtail:
     image: grafana/promtail:2.3.0
     container_name: coffee_promtail
     volumes:
-      - /var/log:/var/log
+      - ./logs:/var/log
       - ./promtail.yml:/etc/promtail/config.yml
+      - /var/lib/docker/containers/:/var/lib/docker/containers/:ro
     command: -config.file=/etc/promtail/config.yml
     networks:
         coffee_net:
           ipv4_address: 172.100.18.8
+    ports:
+      - 9080:9080
+      - 3500:3500
+      - 3600:3600
+    # logging:
+    #   driver: loki
+    #   options:
+    #     loki-url: http://172.100.18.8:3500/loki/api/v1/push
+    #     mode: non-blocking
+    #     max-buffer-size: 4m
+
+  loki:
+    image: grafana/loki:2.3.0
+    container_name: coffee_loki
+    # restart: always
+    volumes:
+      - ./loki.yml:/etc/loki/local-config.yml
+    ports:
+      - 3100:3100
+      # - 9095:9095
+    command: -config.file=/etc/loki/local-config.yml
+    networks:
+      coffee_net:
+        ipv4_address: 172.100.18.7
+    # logging:
+    #   driver: loki
+    #   options:
+    #     loki-url: http://172.100.18.8:3500/loki/api/v1/push
+    #     mode: non-blocking
+    #     max-buffer-size: 4m
+
+  loki-canary:
+    depends_on: 
+      - loki
+    image: grafana/loki-canary:2.3.0
+    container_name: coffee_loki_canary
+    command: [
+      "-addr", "172.100.18.7:3100",
+      "-size", "1024",
+      "-wait", "3m",
+      "-interval", "10s",
+      "-streamname", "stream", # source for docker driver
+      "-streamvalue", "stdout",
+      "-labelname", "container_name",
+      "-labelvalue", "coffee_loki_canary"
+    ]
+    networks:
+      coffee_net:
+        ipv4_address: 172.100.18.10
+    logging:
+      driver: "json-file"
+      options: 
+        tag: "{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}"
+    # logging:
+    #   driver: loki
+    #   options:
+    #     loki-url: http://172.100.18.8:3500/loki/api/v1/push
+    #     mode: non-blocking
+    #     max-buffer-size: 4m
+
+  grafana:
+    depends_on: 
+      - loki-canary
+    image: stifstof/iotgrafana:latest
+    container_name: coffee_grafana
+    restart: always
+    ports:
+      - 3000:3000
+    networks:
+      coffee_net:
+        ipv4_address: 172.100.18.5
+    volumes:
+      - ./logs/grafana.log:/var/log/grafana/grafana.log
+    # logging:
+    #   driver: loki
+    #   options:
+    #     loki-url: http://172.100.18.8:3500/loki/api/v1/push
+    #     mode: non-blocking
+    #     max-buffer-size: 4m
 
 volumes:
-  coffee-datavolume:
-  grafana-storage:
-  loki-data:
+  coffee-sqldatavolume:

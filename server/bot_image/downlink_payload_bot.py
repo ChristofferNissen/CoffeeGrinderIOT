@@ -3,6 +3,9 @@ import base64
 import ttn
 from random import randint
 
+import logging
+logging.basicConfig(filename='/var/log/coffeebot.log', level=logging.INFO)
+
 app_id = "coffeegrinderiot"
 access_key = "ttn-account-v2.GPKtvM0_H3ntqqXrp3b-ijs53XoxdOr8i7aCDOO4d_c"
 mqtt_client = ttn.HandlerClient(app_id, access_key).data()
@@ -19,7 +22,7 @@ bytes = [
 while True:
   mqtt_client.connect()
   payload = bytes[randint(0, len(bytes) - 1)]
-  print("Sending", base64.b64decode(payload))
+  logging.info(f"Sending{base64.b64decode(payload)}")
   mqtt_client.send("coffeegrinderdevice", payload, port=1, sched="replace")
   mqtt_client.close()
-  time.sleep(600)  # every 10 minutes
+  time.sleep(60)  # every minute

@@ -16,6 +16,9 @@ from flask import Flask
 from flask import Response
 from waitress import serve
 
+import logging
+logging.basicConfig(filename='/var/log/mqttimage.log', level=logging.INFO)
+
 
 # PROMETHEUS Metrics 
 CPU_GAUGE = Gauge(
@@ -99,7 +102,7 @@ def get_grinds_in_db(db):
         filtered_msg['Id'] = msg['Id']
         filtered_msg['GrindName'] = msg['GrindName']
         filtered_msg['Duration'] = msg['Duration']
-        print(filtered_msg)
+        logging.info(filtered_msg)
 
 def get_records_in_db():
     """Queries and prints all rows from Records table"""
@@ -114,7 +117,7 @@ def get_records_in_db():
         filtered_msg['Grind'] = msg['Grind']
         filtered_msg['Date'] = msg['Date']
         filtered_msg['Count'] = msg['Count']
-        print(filtered_msg)
+        logging.info(filtered_msg)
 
     db.close()
 
@@ -123,10 +126,10 @@ def create_grindtypes_in_db():
     db = connect_db()
     existing_entries_count = execute_query("SELECT COUNT(*) FROM Grinds", db)
 
-    print("Types of Grinds registered:", existing_entries_count[0]['COUNT(*)'])
+    logging.info(f"Types of Grinds registered: {existing_entries_count[0]['COUNT(*)']}")
 
     if not existing_entries_count[0]['COUNT(*)'] > 0:
-        print("Creating initial grind types in database...")
+        logging.info("Creating initial grind types in database...")
 
         mocca_query = """INSERT INTO Grinds (GrindName, Duration)
                    VALUES ('{}', '{}')""".format(
@@ -159,13 +162,10 @@ def update_db(db, grind, number):
     """Updates database by added number to existing row or create new if first of the day"""
     # check if entry for today exists
     today = datetime.date.today()
-    # print(today)
 
     query = """SELECT COUNT(*) FROM Records WHERE Records.Date = '{}' AND Records.Grind = '{}' """.format(
                         today, grind)
     first_of_the_day = execute_query(query, db)[0]['COUNT(*)'] == 0
-
-    # print("First of the day? ", first_of_the_day)
 
     if first_of_the_day: 
         query = """INSERT INTO Records (Date, Grind, Count)
@@ -182,7 +182,7 @@ def update_db(db, grind, number):
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
     """MQTT Callback when connection is established"""
-    print("Connected with result code "+str(rc))
+    logging.info("Connected with result code "+str(rc))
 
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
@@ -214,13 +214,9 @@ def on_message(client, userdata, msg):
     seconds = time.time().__add__(1) # add one hour for Copenhagen
     HEARTBEAT_GAUGE.set(seconds)
     local_time = time.ctime(seconds)
-    print("New Message intercepted:", local_time)
-    print("Failure", bts[3])
-    print("Mocca:", bts[0])
-    print("Small:", bts[1])
-    print("Large:", bts[2])
+    logging.info(f"New Message intercepted:{local_time} \nFailure {bts[3]} \nMocca: {bts[0]}\nSmall: {bts[1]}\nLarge: {bts[2]}")
 
-    print("Updating the database")
+    logging.info("Updating the database")
     if bts[0] > 0: 
         update_db(db, 1, bts[0])
     if bts[1] > 0: 
@@ -234,22 +230,22 @@ def on_message(client, userdata, msg):
     t_elapsed_ms = (time.time() - start_time) * 1000
     REQ_DURATION_SUMMARY.observe(t_elapsed_ms)
 
-    print("Database update done")
+    logging.info("Database update done")
 
     db.close()
-    
+
 
 
 # main
-print("Waiting for db container to be ready. Sleeping for 20 seconds")
+logging.info("Waiting for db container to be ready. Sleeping for 20 seconds")
 time.sleep(20)
 
-print("Setting up db..")
+logging.info("Setting up db..")
 create_grindtypes_in_db()
 get_records_in_db()
-print("db ready")
+logging.info("db ready")
 
-print("Setting up MQTT")
+logging.info("Setting up MQTT")
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
@@ -257,7 +253,7 @@ client.on_message = on_message
 client.username_pw_set("coffeegrinderiot", "ttn-account-v2.w7h8rh58UWJYy6t_dyzD_HZyW1MOGHgdFTJhJ93xwkk")
 client.connect("eu.thethings.network", 1883, 60)
 
-print("MQTT ready")
+logging.info("MQTT ready")
 client.loop_start()
 
 @app.route("/")

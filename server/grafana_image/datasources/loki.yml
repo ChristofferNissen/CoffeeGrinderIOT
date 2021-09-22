@@ -1,0 +1,8 @@
+apiversion: 1
+
+- name: Loki
+  type: loki
+  access: proxy
+  url: 172.100.18.7:3100
+  jsonData:
+      maxLines: 1000
